@@ -1,0 +1,48 @@
+datasource db {
+    provider = "postgresql"
+    url      = "postgres://scheduler_system_user:BClf4ejI7DYix2jsXUTQaN2kEJcXWBLU@dpg-cfalnrg2i3mjdujbshi0-a.oregon-postgres.render.com/scheduler_system"
+}
+
+generator db {
+    provider             = "prisma-client-py"
+    interface            = "asyncio"
+    recursive_type_depth = 2
+}
+
+model User {
+    id               String   @id
+    created_at       DateTime @default(now())
+    updated_at       DateTime @updatedAt
+    handle           String?
+    elective_courses String?
+    english_group    String?
+    main_group       Group?   @relation(fields: [group_id], references: [id])
+    group_id         String?
+}
+
+model Group {
+    id             String   @id @default(cuid())
+    level_name     String
+    specific_group String
+    users          User[]
+    courses        Course[]
+}
+
+model Course {
+    id          String  @id @default(cuid())
+    description String
+    is_elective Boolean
+    time_slots  Slot[]
+    groups      Group[]
+}
+
+model Slot {
+    id                 String  @id @default(cuid())
+    instructor_name    String?
+    course_description String?
+    room_number        String?
+    start_time         String?
+    end_time           String?
+    course             Course? @relation(fields: [course_id], references: [id])
+    course_id          String?
+}
