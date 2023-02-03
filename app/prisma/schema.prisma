@@ -1,23 +1,24 @@
+generator db {
+    provider             = "prisma-client-py"
+    recursive_type_depth = "2"
+    interface            = "sync"
+}
+
 datasource db {
     provider = "postgresql"
     url      = "postgres://scheduler_system_user:BClf4ejI7DYix2jsXUTQaN2kEJcXWBLU@dpg-cfalnrg2i3mjdujbshi0-a.oregon-postgres.render.com/scheduler_system"
 }
 
-generator db {
-    provider             = "prisma-client-py"
-    interface            = "asyncio"
-    recursive_type_depth = 2
-}
-
 model User {
-    id               String   @id
+    id               BigInt   @id @unique
     created_at       DateTime @default(now())
     updated_at       DateTime @updatedAt
     handle           String?
     elective_courses String?
     english_group    String?
-    main_group       Group?   @relation(fields: [group_id], references: [id])
     group_id         String?
+    remind_me        Boolean  @default(true)
+    main_group       Group?   @relation(fields: [group_id], references: [id])
 }
 
 model Group {
@@ -25,7 +26,8 @@ model Group {
     level_name     String
     specific_group String
     users          User[]
-    courses        Course[]
+    courses        Course[] @relation("CourseToGroup")
+    time_table     Slot[]
 }
 
 model Course {
@@ -33,16 +35,26 @@ model Course {
     description String
     is_elective Boolean
     time_slots  Slot[]
-    groups      Group[]
+    groups      Group[] @relation("CourseToGroup")
 }
 
 model Slot {
-    id                 String  @id @default(cuid())
-    instructor_name    String?
-    course_description String?
-    room_number        String?
-    start_time         String?
-    end_time           String?
-    course             Course? @relation(fields: [course_id], references: [id])
-    course_id          String?
+    id              String   @id @default(cuid())
+    instructor_name String?
+    room_number     String?
+    start_time      DateTime @db.Timestamptz(6)
+    end_time        DateTime @db.Timestamptz(6)
+    course_id       String?
+    course_name     String?
+    type            SlotType @default(LAB)
+    course          Course?  @relation(fields: [course_id], references: [id])
+    group           Group?   @relation(fields: [group_id], references: [id])
+    group_id        String?
+    specific_group  String?
+}
+
+enum SlotType {
+    LAB
+    LEC
+    TUT
 }

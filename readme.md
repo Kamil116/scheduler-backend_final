@@ -1,7 +1,7 @@
 # moolax-backend
 
 
-### Instructions to configure and run project
+### Instructions to config and run project
 ```
 # Create a virtual environment
 $ python3 -m venv venv

@@ -1,21 +1,36 @@
+import time
 import telebot
 import logging
+import schedule
+from threading import Thread
 from logging.handlers import RotatingFileHandler
-from core.data import TOKEN
-from telegram.schedule.data import TEXT_BUTTON_NOW, TEXT_BUTTON_DAY, TEXT_BUTTON_WEEK
+from app.telegram.core import data
+from app.telegram.schedule.data import TEXT_BUTTON_NOW, TEXT_BUTTON_DAY, TEXT_BUTTON_WEEK
+from app.telegram.admin.data import SUPERADMIN_LIST
+from app.telegram.schedule.controller import get_user
 
-bot = telebot.TeleBot(token=TOKEN)
+bot = telebot.TeleBot(token=data.TOKEN)
 
 
 main_markup = telebot.types.ReplyKeyboardMarkup(True)
 main_markup.add(TEXT_BUTTON_NOW, TEXT_BUTTON_DAY, TEXT_BUTTON_WEEK)
 
+commands = [
+    telebot.types.BotCommand("start", "starts innoSchedule bot"),
+    telebot.types.BotCommand("help", "Overview of bot commands"),
+    telebot.types.BotCommand("config_schedule", "Modify group settings"),
+    telebot.types.BotCommand("config_remind", "Modify reminder settings"),
+    telebot.types.BotCommand(
+        "feedback", "Flag inaccurate information(Be as precise as possible)"),
+]
+
 # log configuration
 logger = logging.getLogger(data.LOG_NAME)
 logger.setLevel(logging.INFO)
-handler = RotatingFileHandler(data.LOG_FILE_NAME, maxBytes=data.LOG_MAX_SIZE_BYTES, 
-backupCount=data.LOG_BACKUP_COUNT)
-handler.setFormatter(logging.Formatter(data.LOG_MESSAGE_FORMAT, data.LOG_DATE_FORMAT))
+handler = RotatingFileHandler(data.LOG_FILE_NAME, maxBytes=data.LOG_MAX_SIZE_BYTES,
+                              backupCount=data.LOG_BACKUP_COUNT)
+handler.setFormatter(logging.Formatter(
+    data.LOG_MESSAGE_FORMAT, data.LOG_DATE_FORMAT))
 logger.addHandler(handler)
 
 
@@ -25,16 +40,79 @@ def log(module, message):
     else:
         user = str(message.from_user.id)
     logger.info(f"{module.rjust(15)} :: {user.rjust(20)} ::"
-    f"{message.text if message.text else '--not_text--'}")
+                f"{message.text if message.text else '--not_text--'}")
 
 
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-    bot.reply_to(message, "Hey Daniel Here")
+def attach_core_module():
+
+    @bot.message_handler(commands=['start', 'help'])
+    def send_welcome(message):
+        log(data.MODULE_NAME, message)
+        if message.text == "/start":
+            bot.send_message(message.chat.id, data.MESSAGE_HI,
+                             reply_markup=main_markup)
+        elif message.text == "/help":
+            bot.send_message(message.chat.id, data.MESSAGE_HELP,
+                             reply_markup=main_markup)
+
+    @bot.message_handler(commands=['feedback'])
+    def send_feedback(message):
+        log(data.MODULE_NAME, message)
+        if message.text == "/feedback":
+            msg = bot.send_message(message.chat.id, data.FEEDBACK_PROMPT,
+                                   reply_markup=main_markup)
+            bot.register_next_step_handler(msg, process_feedback_step)
+
+    def process_feedback_step(message):
+        log(data.MODULE_NAME, message)
+
+        if not message.text:
+            bot.send_message(message.chat.id, data.MESSAGE_ERROR,
+                             reply_markup=main_markup)
+            return
+
+        user = get_user(message.from_user.id)
+        if not user:
+            return
+        alias = user.handle if user.handle else user.id
+        feedback = message.text
+        for admin in SUPERADMIN_LIST:
+            bot.send_message(
+                admin, f"{data.MESSAGE_FEEDBACK} {str(alias)}:\n{feedback}")
+        bot.send_message(message.chat.id, data.FEEDBACK_SUCCESS,
+                         reply_markup=main_markup)
 
 
-@bot.message_handler(func=lambda m: True)
-def echo_all(message):
-    print(message)
-    bot.reply_to(message, message.text)
+def compose_attached_modules(set_proxy=False):
 
+    @bot.message_handler()
+    def garbage_message_handler(message):
+        """
+        Fallback handler for unknown messages
+        To be called after all other modules have mounted their handlers
+        """
+        log(data.MODULE_NAME, message)
+        # You could implement chatgpt or just Q&A over here
+        bot.send_message(message.chat.id, data.MESSAGE_ERROR,
+                         reply_markup=main_markup)
+        user = get_user(message.from_user.id)
+        if not user:
+            return
+        alias = user.handle if user.handle else user.id
+        for admin in SUPERADMIN_LIST:
+            bot.send_message(
+                admin, f"{data.MESSAGE_UNKNOWN} {str(alias)}:\n{message.text}")
+
+    def polling_telegram_bot_commands():
+        print("Bot begins polling")
+        bot.infinity_polling(long_polling_timeout=5, timeout=10)
+
+    def pending_schedule():
+        # Verify schedule if some action should be made
+        while True:
+            schedule.run_pending()
+            time.sleep(30)
+
+    # bot.set_my_commands(commands=commands)
+    Thread(target=polling_telegram_bot_commands, daemon=True).start()
+    Thread(target=pending_schedule, daemon=True).start()

@@ -1,18 +1,13 @@
-from threading import Thread
 from fastapi import FastAPI
 from starlette.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import db
-from app.telegram.core.handlers import bot
+from app.telegram.init import setup_telegram_bot
 # import sys
 # print(sys.executable)
 # print(sys.path)
 
 from app.version import router as final_router
-
-
-
-
 
 app = FastAPI(
     title="ScheduleAPI",
@@ -24,8 +19,8 @@ origins = ['*']
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= origins,
-    allow_credentials= True,
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -35,32 +30,22 @@ app.include_router(final_router, prefix="/api/v1")
 
 
 @app.on_event("startup")
-async def startup():
+def startup():
     print(f'db connected...')
-    await db.connect()
+    db.connect()
+
+    # Running telegram bot
+    setup_telegram_bot()
 
 
 @app.on_event("shutdown")
-async def shutdown():
+def shutdown():
     print(f'db disconnected...')
-    await db.disconnect()
-
-@app.get('/any')
-async def something():
-    user = await db.user.create(
-        {
-            'id': '54545612',
-            'handle': 'yuuityi',
-        }
-    )
-    print(f'created user: {user.json(indent=2, sort_keys=True)}')
-
-    found = await db.user.find_unique(where={'id': user.id})
-    assert found is not None
-    print(f'found post: {found.json(indent=2, sort_keys=True)}')
+    db.disconnect()
 
 
-@app.get("/", response_class=HTMLResponse)
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index():
     return """
     <!Doctype html>
@@ -76,12 +61,4 @@ def index():
     </html>
     """
 
-
-def polling_telegram_bot_commands():
-    print("Bot begins polling")
-    bot.polling(none_stop=False, timeout=50)
-
-
-polling_thread = Thread(target=polling_telegram_bot_commands, daemon=True)
-polling_thread.start()
 

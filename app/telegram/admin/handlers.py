@@ -1,8 +1,6 @@
 import telebot
 from core.data import TOKEN
-
-
-bot = telebot.TeleBot(token=TOKEN)
+from app.telegram.core.handlers import bot, log, main_markup
 
 
 main_markup = telebot.types.ReplyKeyboardMarkup(True)
