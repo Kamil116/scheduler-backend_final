@@ -1,6 +1,7 @@
 MODULE_NAME = "admin"
 
-TOKEN = "625620708:AAFII7HO_Anlcn0pLMUN9Y_HNkTDJ0MLctc"
+# "625620708:AAFII7HO_Anlcn0pLMUN9Y_HNkTDJ0MLctc" - worksilently_bot
+TOKEN = "6057962313:AAEEDkC3cDA0j3JQBsqr6FlMorSPzXQ7uvs"
 
 MESSAGE_HI = "Hi there!✋"
 MESSAGE_HELP = "Schedule platform for Innopolis students.\n\n" \

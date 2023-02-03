@@ -111,7 +111,7 @@ def compose_attached_modules(set_proxy=False):
         # Verify schedule if some action should be made
         while True:
             schedule.run_pending()
-            time.sleep(30)
+            time.sleep(1)
 
     # bot.set_my_commands(commands=commands)
     Thread(target=polling_telegram_bot_commands, daemon=True).start()

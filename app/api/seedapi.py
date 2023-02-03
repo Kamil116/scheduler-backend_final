@@ -66,6 +66,17 @@ def drop_slot():
     return {"message": "successful"}
 
 
+@router.get('/quick_course_fix')
+def quick_course_fix():
+    slots = db.slot.find_many(include={"course": True})
+    print(slots[0])
+    for slot in slots:
+        if not slot.course_name:
+            db.slot.update(where={"id": slot.id}, data={
+                "course_name": slot.course.description if slot.course else ""})
+    return {"message": "successful"}
+
+
 @router.get('/connect_slot_course_group')
 def connect_slot_course_group():
     slots = db.slot.find_many()
