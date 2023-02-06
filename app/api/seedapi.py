@@ -1,8 +1,9 @@
+import arrow
 from fastapi import APIRouter
 from app.db import db
 
 # seed data
-from app.data import MAIN_GROUPS, MAIN_COURSES, MAIN_SLOTS
+from app.data import MAIN_GROUPS, TIMEZONE, MAIN_COURSES, ELECTIVE_COURSES, MAIN_SLOTS, SNE_SLOTS, MS_ELECTIVE_SLOTS, SNE_COURSES, B20_ELECTIVE_SLOTS, B19_ELECTIVE_SLOTS
 
 router = APIRouter(tags=["Seed"], prefix="")
 
@@ -19,7 +20,8 @@ def seed_group():
 
 @router.get('/seed_course')
 def seed_course():
-    for course in MAIN_COURSES:
+    # SNE_COURSES, MAIN_COURSES, ELECTIVE_COURSES
+    for course in ELECTIVE_COURSES:
         if not course["for_all_sub_groups"]:
             # get the ids of all groups in 'sub_groups' attribute
             course_groups_ids = []
@@ -30,11 +32,11 @@ def seed_course():
                 course_groups_ids.append({"id": group.id})
             # create course and connect groups by id
             db.course.create(data={
-                "description": course["name"],
-                "is_elective": False,
-                "groups": {
-                    "connect": course_groups_ids
-                }
+                "description": course["description"],
+                "is_elective": course["is_elective"],
+                # "groups": {
+                #     "connect": course_groups_ids
+                # }
             })
         else:
             group_name = course["groups"]
@@ -56,7 +58,43 @@ def seed_course():
 
 @router.get('/seed_slot')
 def seed_slot():
-    db.slot.create_many(data=MAIN_SLOTS)
+    # MAIN_SLOTS, SNE_SLOTS
+    db.slot.create_many(data=MS_ELECTIVE_SLOTS)
+    return {"message": "successful"}
+
+
+@router.get('/duplicate_main_course_slots')
+def duplicate_main_course_slots():
+    new_slots = db.slot.find_many(where={
+        "specific_group": {
+            "not_in": ["M22-SNE-01", "B20", "B19", "M22"]
+        }})
+    new_slots = list(map(lambda x: {
+        "instructor_name": x.instructor_name ,
+        "room_number": x.room_number,
+        "start_time": arrow.get(x.start_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
+        "end_time": arrow.get(x.end_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
+        "course_id": x.course_id,
+        "course_name": x.course_name,
+        "type": x.type,
+        "group_id": x.group_id,
+        "specific_group": x.specific_group,
+    }, new_slots))
+    # db.slot.create_many(data=new_slots)
+
+    for _ in range(3, 10):
+        new_slots = list(map(lambda x: {
+            "instructor_name": x["instructor_name"],
+            "room_number": x["room_number"],
+            "start_time": arrow.get(x["start_time"]).to(TIMEZONE).shift(weeks=+1).isoformat(),
+            "end_time": arrow.get(x["end_time"]).to(TIMEZONE).shift(weeks=+1).isoformat(),
+            "course_id": x["course_id"],
+            "course_name": x["course_name"],
+            "type": x["type"],
+            "group_id": x["group_id"],
+            "specific_group": x["specific_group"],
+        }, new_slots))
+        # db.slot.create_many(data=new_slots)
     return {"message": "successful"}
 
 
@@ -79,7 +117,7 @@ def quick_course_fix():
 
 @router.get('/connect_slot_course_group')
 def connect_slot_course_group():
-    slots = db.slot.find_many()
+    slots = db.slot.find_many(where={"specific_group": "M22-SNE-01"})
     for slot in slots:
         course = db.course.find_first(where={"description": slot.course_name})
         group = db.group.find_first(
