@@ -49,9 +49,11 @@ def attach_core_module():
     def send_welcome(message):
         log(data.MODULE_NAME, message)
         if message.text == "/start":
+            print(f"USER {message.from_user.id} clicked start")
             bot.send_message(message.chat.id, data.MESSAGE_HI,
                              reply_markup=main_markup)
         elif message.text == "/help":
+            print(f"USER {message.from_user.id} clicked help")
             bot.send_message(message.chat.id, data.MESSAGE_HELP,
                              reply_markup=main_markup)
 
@@ -59,6 +61,7 @@ def attach_core_module():
     def send_feedback(message):
         log(data.MODULE_NAME, message)
         if message.text == "/feedback":
+            print(f"USER {message.from_user.id} wants to send feedback")
             msg = bot.send_message(message.chat.id, data.FEEDBACK_PROMPT,
                                    reply_markup=main_markup)
             bot.register_next_step_handler(msg, process_feedback_step)

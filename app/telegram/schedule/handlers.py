@@ -10,6 +10,7 @@ def attach_schedule_module():
         log(data.MODULE_NAME, message)
 
         if message.text == "/config_schedule":
+            print(f"CONFIG SCHEDULE pressed by {message.from_user.id}")
             user = controller.get_user(message.from_user.id)
             if not user:
                 controller.register_user(
@@ -36,7 +37,7 @@ def attach_schedule_module():
             bot.send_message(message.chat.id, data.MESSAGE_ERROR,
                              reply_markup=main_markup)
             return
-
+        print(f"{course} pressed by {message.from_user.id}")
         options = telebot.types.ReplyKeyboardMarkup(True, False)
         specific_groups = controller.get_specific_group(course)
         options.add(*specific_groups)
@@ -57,6 +58,7 @@ def attach_schedule_module():
                              reply_markup=main_markup)
             return
         specific_group = message.text
+        print(f"{specific_group} pressed by {message.from_user.id}")
         controller.add_user_group(specific_group, message.from_user.id)
         bot.send_message(message.chat.id, data.MESSAGE_SETTINGS_SAVED,
                          reply_markup=main_markup)
@@ -77,8 +79,10 @@ def attach_schedule_module():
                 message.from_user.id, message.from_user.username)
 
         if message.text == data.TEXT_BUTTON_NOW:
+            print(f"NOW pressed by {message.from_user.id}")
             send_current_schedule(message.chat.id, message.from_user.id)
         elif message.text == data.TEXT_BUTTON_DAY:
+            print(f"DAY pressed by {message.from_user.id}")
             markup = telebot.types.ReplyKeyboardMarkup(True)
             buttons = list()
             day_of_week = controller.get_day_of_the_week()
@@ -89,6 +93,7 @@ def attach_schedule_module():
             bot.send_message(
                 message.chat.id, data.REQUEST_WEEKDAY, reply_markup=markup)
         elif message.text == data.TEXT_BUTTON_WEEK:
+            print(f"WEEK pressed by {message.from_user.id}")
             bot.send_message(message.chat.id, data.MESSAGE_FULL_WEEK,
                              reply_markup=main_markup, parse_mode="MarkdownV2")
 
@@ -120,6 +125,7 @@ def attach_schedule_module():
         if weekday not in data.TEXT_DAYS_OF_WEEK:
             return
 
+        print(f"{weekday} pressed by {message.from_user.id}")
         schedule = controller.get_day_lessons(
             message.from_user.id, day=data.TEXT_DAYS_OF_WEEK.index(weekday))
 
