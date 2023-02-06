@@ -26,15 +26,7 @@ def get_slots(start: str = "", end: str = "", group: str = "", course: str = "",
     elif course:
         course_time_slots = db.course.find_first(
             where={"description": course}, include={"time_slots": True})
-        slots = []
-        memorized_slots = []
-        for s in course_time_slots.time_slots:
-            slot_id = (s.instructor_name, s.type, s.course_id,
-                       s.room_number, s.start_time, s.end_time)
-
-            if slot_id not in memorized_slots:
-                memorized_slots.append(slot_id)
-                slots.append(s)
+        slots = course_time_slots.time_slots
     else:
         slots = db.slot.find_many(
             include={"course": True},
@@ -48,7 +40,7 @@ def get_slots(start: str = "", end: str = "", group: str = "", course: str = "",
             }
         )
     return slots
-
+# "\\copy public.\"Slot\" (id, instructor_name, room_number, start_time, end_time, course_id, course_name, type, group_id, specific_group) FROM '/Users/danielatonge/Downloads/week3_schedule/slot.csv' DELIMITER ',' CSV HEADER QUOTE '\"' ESCAPE '''';""
 
 @router.post("/")
 def create_slot(slotInput: schemas.Slot):
