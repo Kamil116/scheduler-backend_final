@@ -22,7 +22,7 @@ def get_reminder_times():
     unique_start_times = []
 
     for start_time in start_times:
-        arrow_time = schedule_controller.get_time_in_timezone_arrow(
+        arrow_time = schedule_controller.get_time_in_local_timezone(
             start_time['start_time']).shift(minutes=-data.REMIND_WHEN_LEFT_MINUTES)
         string_time = arrow_time.format('HH:mm')
         if string_time not in unique_start_times:
@@ -42,7 +42,8 @@ def get_reminder_subscribers():
             continue
         min_before_start = schedule_controller.minutes_before_start(slot)
         print(min_before_start)
-        if slot and abs(min_before_start - data.REMIND_WHEN_LEFT_MINUTES) <= 1:
+        if slot and abs(min_before_start - data.REMIND_WHEN_LEFT_MINUTES) <= 5:
             need_remind.append((user.id, slot))
     print(need_remind)
+    print(f"Reminding #{len(need_remind)} subscribers")
     return need_remind

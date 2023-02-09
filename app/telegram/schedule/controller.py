@@ -125,6 +125,10 @@ def get_time_in_timezone_arrow(time):
     return arrow.get(time).to(data.TIMEZONE)
 
 
+def get_time_in_local_timezone(time):
+    return arrow.get(time).to('local')
+
+
 def minutes_until_end(slot):
     seconds_left = get_time_in_timezone_arrow(
         slot.end_time) - arrow.now(data.TIMEZONE)

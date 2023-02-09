@@ -47,7 +47,7 @@ def attach_remind_module():
                                  schedule_controller.print_slot(slot), reply_markup=main_markup)
                 print(f"Reminder sent to {user_id}")
             except Exception as exception:
-                print(f"Error occured Sending Reminder sent to {user_id}")
+                print(f"Error occured Sending Reminder to {user_id}")
                 # if hasattr(exception, 'result') and exception.result.status_code == 403:
                 controller.set_reminder_off(user_id)
                 continue
