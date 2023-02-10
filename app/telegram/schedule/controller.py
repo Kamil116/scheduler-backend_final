@@ -115,7 +115,8 @@ def get_day_lessons(user_id, day):
 def get_week_lessons(user_id):
     user = db.user.find_unique(where={"id": user_id})
     current_time = arrow.now(data.TIMEZONE)
-    monday_morning = current_time.shift(weekday=0).replace(hour=1, minute=0, second=0)
+    monday_morning = current_time.shift(
+        days=-current_time.weekday()).replace(hour=1, minute=0, second=0)
     friday_evening = monday_morning.shift(
         weekday=5).replace(hour=23, minute=0, second=0)
     lessons = db.slot.find_many(
@@ -132,6 +133,7 @@ def get_week_lessons(user_id):
     )
     return lessons
 
+
 def get_week_number():
     time_now = arrow.now(data.TIMEZONE)
     start_academic_yr = arrow.get(data.ACADEMIC_YEAR_START).to(data.TIMEZONE)
@@ -139,7 +141,6 @@ def get_week_number():
     for i in arrow.Arrow.span_range("week", start_academic_yr, time_now):
         weeks += 1
     return weeks
-
 
 
 ###############
@@ -159,18 +160,19 @@ def get_time_in_local_timezone(time):
     return arrow.get(time).to('local')
 
 
-
 def minutes_until_end(slot):
     seconds_left = get_time_in_timezone_arrow(
         slot.end_time) - arrow.now(data.TIMEZONE)
-    print(f"SECONDS LEFT for {slot.course_name}:", seconds_left.total_seconds() / 60)
+    print(f"SECONDS LEFT for {slot.course_name}:",
+          seconds_left.total_seconds() / 60)
     return round(seconds_left.total_seconds() / 60)
 
 
 def minutes_before_start(slot):
     seconds_to_begin = get_time_in_timezone_arrow(
         slot.start_time) - arrow.now(data.TIMEZONE)
-    print(f"SECONDS TO BEGIN {slot.course_name}:", seconds_to_begin.total_seconds() / 60)
+    print(f"SECONDS TO BEGIN {slot.course_name}:",
+          seconds_to_begin.total_seconds() / 60)
     return round(seconds_to_begin.total_seconds() / 60)
 
 
