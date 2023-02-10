@@ -1,4 +1,4 @@
-MODULE_NAME = "schedule"
+MODULE_NAME = "elective"
 
 TEXT_DAYS_OF_WEEK = ("Mo", "Tu", "We", "Th", "Fr", "Sa")
 TEXT_BUTTON_NOW = "NOW❗"

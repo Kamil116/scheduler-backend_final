@@ -42,7 +42,7 @@ def get_reminder_subscribers():
             continue
         min_before_start = schedule_controller.minutes_before_start(slot)
         print(min_before_start)
-        if slot and abs(min_before_start - data.REMIND_WHEN_LEFT_MINUTES) <= 5:
+        if slot and abs(min_before_start - data.REMIND_WHEN_LEFT_MINUTES) <= 2:
             need_remind.append((user.id, slot))
     print(need_remind)
     print(f"Reminding #{len(need_remind)} subscribers")

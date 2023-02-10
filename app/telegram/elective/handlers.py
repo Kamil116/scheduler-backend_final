@@ -1,16 +1,16 @@
 from app.telegram.core.handlers import bot, log, main_markup
-from app.telegram.schedule import data, controller
+from app.telegram.elective import data, controller
 import telebot
 
 
 def attach_schedule_module():
 
-    @bot.message_handler(commands=['config_schedule'])
+    @bot.message_handler(commands=['config_elective'])
     def schedule_configuration(message):
         log(data.MODULE_NAME, message)
 
-        if message.text == "/config_schedule":
-            print(f"CONFIG SCHEDULE pressed by {message.from_user.id}")
+        if message.text == "/config_elective":
+            print(f"CONFIG ELECTIVE pressed by {message.from_user.id}")
             user = controller.get_user(message.from_user.id)
             if not user:
                 controller.register_user(

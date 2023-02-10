@@ -22,8 +22,10 @@ commands = [
     telebot.types.BotCommand("config_remind", "Modify reminder settings"),
     telebot.types.BotCommand(
         "feedback", "Flag inaccurate information(Be as precise as possible)"),
+    telebot.types.BotCommand("link", "Visit the official course schedule"),
+    telebot.types.BotCommand(
+        "week_number", "Week number by the academic calendar"),
 ]
-
 # log configuration
 logger = logging.getLogger(data.LOG_NAME)
 logger.setLevel(logging.INFO)
@@ -116,6 +118,7 @@ def compose_attached_modules(set_proxy=False):
             schedule.run_pending()
             time.sleep(1)
 
-    # bot.set_my_commands(commands=commands)
+    bot.delete_my_commands()
+    bot.set_my_commands(commands=commands)
     Thread(target=polling_telegram_bot_commands, daemon=True).start()
     Thread(target=pending_schedule, daemon=True).start()
