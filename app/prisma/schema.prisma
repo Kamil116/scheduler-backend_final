@@ -17,7 +17,7 @@ model User {
   handle             String?
   group_id           String?
   remind_me          Boolean  @default(true)
-  optional_course_id String?  @unique
+  optional_course_id String?
   main_group         Group?   @relation(fields: [group_id], references: [id])
   optional_course    Course?  @relation("OptionalCourseUser", fields: [optional_course_id], references: [id])
   elective_courses   Course[] @relation("CourseToUser")
@@ -39,7 +39,7 @@ model Course {
   short_name            String?
   valid_group           String?
   time_slots            Slot[]
-  optional_course_users User?   @relation("OptionalCourseUser")
+  optional_course_users User[]  @relation("OptionalCourseUser")
   groups                Group[] @relation("CourseToGroup")
   elective_users        User[]  @relation("CourseToUser")
 }
