@@ -11,18 +11,23 @@ MESSAGE_FULL_WEEK = "[Full week schedule](https://docs.google.com/spreadsheets/d
 MESSAGE_FREE_DAY = "No lessons on this day! Lucky you are!"
 MESSAGE_FRIEND_NOT_FOUND = "Sorry. Your friend is not registered.\nPlease tell him about our cool bot!"
 MESSAGE_ERROR = "Sorry, I did not understand you"
-MESSAGE_SETTINGS_SAVED = "Your schedule settings have been saved successfully!\n" \
-                         "By default, you will receive reminders 10mins before your classes begin\n" \
-    "Use /config_remind to turn reminders off"
+MESSAGE_SETTINGS_SAVED = "Your elective has been added successfully!\n" \
+                         "Use /add_elective to add another elective\n" \
+    "Use /rm_electives to clear all registered electives"
 MESSAGE_NO_LESSON = "No lessons"
+MESSAGE_OPTIONAL_SETTINGS_SAVED = "Your optional course has been saved successfully!\n" \
+    "Use /config_optional to modify your choice \n"
 
 
-REQUEST_COURSE = "What's your course?"
+REQUEST_ELECTIVE = "Select an elective?"
+REQUEST_OPTIONAL = "Select an optional course?"
 REQUEST_GROUP = "What's your group?"
 REQUEST_ENGLISH = "What's your English group?"
 REQUEST_ALIAS = "What's your friend's alias?\n" \
                 "By the way, now you can just send friend's alias without calling these command"
 REQUEST_WEEKDAY = "Select day of the week"
+
+CLEARED_ELECTIVE = "All electives have been successfully removed. Use /add_elective to add an elective"
 
 HEADER_NOW = "\n"
 HEADER_WEEK = "\n"

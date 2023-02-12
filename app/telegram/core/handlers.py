@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 from app.telegram.core import data
 from app.telegram.schedule.data import TEXT_BUTTON_NOW, TEXT_BUTTON_DAY, TEXT_BUTTON_WEEK
 from app.telegram.admin.data import SUPERADMIN_LIST
-from app.telegram.schedule.controller import get_user
+from app.telegram.schedule.controller import get_user, get_full_user
 
 bot = telebot.TeleBot(token=data.TOKEN)
 
@@ -18,13 +18,19 @@ main_markup.add(TEXT_BUTTON_NOW, TEXT_BUTTON_DAY, TEXT_BUTTON_WEEK)
 commands = [
     telebot.types.BotCommand("start", "starts innoSchedule bot"),
     telebot.types.BotCommand("help", "Overview of bot commands"),
-    telebot.types.BotCommand("config_schedule", "Modify group settings"),
-    telebot.types.BotCommand("config_remind", "Modify reminder settings"),
+    telebot.types.BotCommand("config_schedule", "Configure group settings"),
+    telebot.types.BotCommand("add_elective", "Add an elective course"),
     telebot.types.BotCommand(
-        "feedback", "Flag inaccurate information(Be as precise as possible)"),
+        "rm_electives", "Clear all registered elective courses"),
+    telebot.types.BotCommand("config_remind", "Configure reminder settings"),
     telebot.types.BotCommand("link", "Visit the official course schedule"),
     telebot.types.BotCommand(
         "week_number", "Week number by the academic calendar"),
+    telebot.types.BotCommand("profile", "View my profile information"),
+    telebot.types.BotCommand(
+        "config_optional", "Configure optional courses e.g Russian Lang."),
+    telebot.types.BotCommand(
+        "feedback", "Flag inaccurate information(Be as precise as possible)"),
 ]
 # log configuration
 logger = logging.getLogger(data.LOG_NAME)
@@ -67,6 +73,25 @@ def attach_core_module():
             msg = bot.send_message(message.chat.id, data.FEEDBACK_PROMPT,
                                    reply_markup=main_markup)
             bot.register_next_step_handler(msg, process_feedback_step)
+
+    @bot.message_handler(commands=['profile'])
+    def view_profile(message):
+        log(data.MODULE_NAME, message)
+        print(f"USER {message.from_user.id} wants to see profile")
+        user = get_full_user(message.from_user.id)
+        if not user:
+            return
+        elective_courses = user.elective_courses
+        elective_abbrevations = list(
+            map(lambda course: course.short_name, elective_courses))
+
+        optional_course = user.optional_course
+        reply = f"GROUP - {user.main_group.specific_group if user.main_group else 'NOT SET'}" + \
+            f"\nELECTIVE - {', '.join(elective_abbrevations) if elective_courses else 'NOT SET'}" + \
+            f"\nOPTIONAL COURSE - {optional_course.short_name if optional_course else 'NOT SET'}" + \
+            f"\nREMINDER - {'ON' if user.remind_me else 'OFF'}"
+        bot.send_message(message.chat.id, reply,
+                         reply_markup=main_markup)
 
     def process_feedback_step(message):
         log(data.MODULE_NAME, message)

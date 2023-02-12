@@ -1,13 +1,21 @@
 MODULE_NAME = "core"
 
 TOKEN = "625620708:AAFII7HO_Anlcn0pLMUN9Y_HNkTDJ0MLctc"  # - worksilently_bot
-# TOKEN = "6057962313:AAEEDkC3cDA0j3JQBsqr6FlMorSPzXQ7uvs" # - test_inno_schedule_bot
+# TOKEN = "6057962313:AAEEDkC3cDA0j3JQBsqr6FlMorSPzXQ7uvs"  # - test_inno_schedule_bot
+# TOKEN = "1360816203:AAGlHpdXrWlv6p7EGEImAgRTqQOoUNMkbC0"  # - inno_schedule_bot
 
 MESSAGE_HI = "Hi there!✋"
 MESSAGE_HELP = "Schedule platform for Innopolis students.\n\n" \
-               "Some commands, that might be useful for you:\n" \
+               "Some useful commands:\n" \
                "/config_schedule - change group settings\n" \
-               "/config_remind - change reminders settings\n" \
+    "/add_elective - add an elective course\n" \
+    "/rm_electives - clear all registered elective courses\n" \
+    "/config_remind - change reminders settings\n" \
+    "/link - visit the official course schedule\n" \
+    "/week_number - week number by the academic calendar\n" \
+    "/profile - view my profile information\n" \
+    "/config_optional - configure optional courses e.g Russian Lang.\n" \
+    "/feedback - flag inaccurate information(Be as precise as possible)\n" \
                "/help\n\n" \
                "Inspired by: https://gitlab.com/Louie_ru/InnoSchedule\n" \
                "Big thanks to @Nmikriukov and @thedownhill\n" \

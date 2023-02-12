@@ -8,6 +8,24 @@ def get_user(user_id):
     return user
 
 
+def get_user_with_settings(user_id):
+    user = db.user.find_unique(
+        where={'id': user_id}, include={"main_group": True})
+    return user
+
+
+def get_full_user(user_id):
+    user = db.user.find_unique(
+        where={'id': user_id},
+        include={
+            "main_group": True,
+            "elective_courses": True,
+            "optional_course": True
+        }
+    )
+    return user
+
+
 def register_user(user_id, handle=""):
     return db.user.create(data={
         "id": user_id,
@@ -48,11 +66,21 @@ def add_user_group(specific_group, user_id):
 
 
 def get_current_lesson(user_id):
-    user = db.user.find_unique(where={"id": user_id})
+    user = db.user.find_unique(where={"id": user_id}, include={
+                               "elective_courses": True})
+    elective_courses_ids = list(
+        map(lambda course: course.id, user.elective_courses))
+    optional_course_id = user.optional_course_id
+    if optional_course_id:
+        elective_courses_ids.append(optional_course_id)
     timenow = arrow.now(data.TIMEZONE).isoformat()
     lesson = db.slot.find_first(
         where={
-            "group_id": user.group_id,
+            "OR": [
+                {"group_id": user.group_id},
+                {"course_id": {
+                    "in": elective_courses_ids
+                }}],
             "start_time": {
                 "lte": timenow
             },
@@ -65,7 +93,15 @@ def get_current_lesson(user_id):
 
 
 def get_next_lesson(user_id):
-    user = db.user.find_unique(where={"id": user_id})
+    user = db.user.find_unique(where={"id": user_id}, include={
+                               "elective_courses": True})
+    elective_courses_ids = list(
+        map(lambda course: course.id, user.elective_courses))
+
+    optional_course_id = user.optional_course_id
+    if optional_course_id:
+        elective_courses_ids.append(optional_course_id)
+
     timenow = arrow.now(data.TIMEZONE)
     iso_timenow = timenow.datetime
     date_start = arrow.get(timenow.date())
@@ -75,7 +111,11 @@ def get_next_lesson(user_id):
             "start_time": "asc"
         },
         where={
-            "group_id": user.group_id,
+            "OR": [
+                {"group_id": user.group_id},
+                {"course_id": {
+                    "in": elective_courses_ids
+                }}],
             "start_time": {
                 "gte": date_start.isoformat(),
                 "lte": date_end.isoformat()
@@ -90,7 +130,15 @@ def get_next_lesson(user_id):
 
 
 def get_day_lessons(user_id, day):
-    user = db.user.find_unique(where={"id": user_id})
+    user = db.user.find_unique(where={"id": user_id}, include={
+                               "elective_courses": True})
+    elective_courses_ids = list(
+        map(lambda course: course.id, user.elective_courses))
+
+    optional_course_id = user.optional_course_id
+    if optional_course_id:
+        elective_courses_ids.append(optional_course_id)
+
     current_time = arrow.now(data.TIMEZONE)
     current_weekday = current_time.weekday()
     choosen_date = current_time.shift(days=day-current_weekday).date()
@@ -102,7 +150,11 @@ def get_day_lessons(user_id, day):
             "start_time": "asc"
         },
         where={
-            "group_id": user.group_id,
+            "OR": [
+                {"group_id": user.group_id},
+                {"course_id": {
+                    "in": elective_courses_ids
+                }}],
             "start_time": {
                 "gte": date_start.isoformat(),
                 "lte": date_end.isoformat()
@@ -113,21 +165,35 @@ def get_day_lessons(user_id, day):
 
 
 def get_week_lessons(user_id):
-    user = db.user.find_unique(where={"id": user_id})
+    user = db.user.find_unique(where={"id": user_id}, include={
+                               "elective_courses": True})
+    elective_courses_ids = list(
+        map(lambda course: course.id, user.elective_courses))
+
+    optional_course_id = user.optional_course_id
+    if optional_course_id:
+        elective_courses_ids.append(optional_course_id)
+
     current_time = arrow.now(data.TIMEZONE)
+    current_weekday = current_time.weekday()
     monday_morning = current_time.shift(
-        days=-current_time.weekday()).replace(hour=1, minute=0, second=0)
-    friday_evening = monday_morning.shift(
-        weekday=5).replace(hour=23, minute=0, second=0)
+        days=-current_weekday).replace(hour=1, minute=0, second=0)
+    saturday_evening = monday_morning.shift(
+        weekday=6).replace(hour=23, minute=0, second=0)
+
     lessons = db.slot.find_many(
         order={
             "start_time": "asc"
         },
         where={
-            "group_id": user.group_id,
+            "OR": [
+                {"group_id": user.group_id},
+                {"course_id": {
+                    "in": elective_courses_ids
+                }}],
             "start_time": {
                 "gte": monday_morning.isoformat(),
-                "lte": friday_evening.isoformat()
+                "lte": saturday_evening.isoformat()
             }
         }
     )

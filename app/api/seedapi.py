@@ -3,7 +3,12 @@ from fastapi import APIRouter
 from app.db import db
 
 # seed data
-from app.data import MAIN_GROUPS, TIMEZONE, MAIN_COURSES, ELECTIVE_COURSES, MAIN_SLOTS, SNE_SLOTS, MS_ELECTIVE_SLOTS, SNE_COURSES, B20_ELECTIVE_SLOTS, B19_ELECTIVE_SLOTS
+from app.data import MAIN_GROUPS, TIMEZONE, \
+    MAIN_COURSES, ELECTIVE_COURSES, MAIN_SLOTS, \
+    SNE_SLOTS, MS_ELECTIVE_SLOTS, SNE_COURSES, \
+    B20_ELECTIVE_SLOTS, B19_ELECTIVE_SLOTS, \
+    MS_ELECTIVE_NAMES, BS4_ELECTIVE_NAMES, BS3_ELECTIVE_NAMES, \
+    RFL_COURSES, RFL_SLOTS
 
 router = APIRouter(tags=["Seed"], prefix="")
 
@@ -56,10 +61,22 @@ def seed_course():
     return {"message": "successful"}
 
 
+@router.get('/seed_russian_course')
+def seed_russian_course():
+    for course in RFL_COURSES:
+        # create course and connect groups by id
+        db.course.create(data={
+            "description": course["description"],
+            "is_elective": course["is_elective"],
+            "short_name": course["short_name"],
+        })
+    return {"message": "successful"}
+
+
 @router.get('/seed_slot')
 def seed_slot():
-    # MAIN_SLOTS, SNE_SLOTS
-    db.slot.create_many(data=MS_ELECTIVE_SLOTS)
+    # MAIN_SLOTS, SNE_SLOTS, RFL_SLOTS
+    db.slot.create_many(data=RFL_SLOTS)
     return {"message": "successful"}
 
 
@@ -70,7 +87,7 @@ def duplicate_main_course_slots():
             "not_in": ["M22-SNE-01", "B20", "B19", "M22"]
         }})
     new_slots = list(map(lambda x: {
-        "instructor_name": x.instructor_name ,
+        "instructor_name": x.instructor_name,
         "room_number": x.room_number,
         "start_time": arrow.get(x.start_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
         "end_time": arrow.get(x.end_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
@@ -117,26 +134,12 @@ def quick_course_fix():
 
 @router.get('/connect_slot_course_group')
 def connect_slot_course_group():
-    slots = db.slot.find_many(where={"specific_group": "M22-SNE-01"})
+    slots = db.slot.find_many(where={"specific_group": {
+        "in": ["RFL-INTER", "RFL-BEGIN-M1", "RFL-BEGIN-M2", "RFL-BEGIN-BACH"]}})
     for slot in slots:
-        course = db.course.find_first(where={"description": slot.course_name})
-        group = db.group.find_first(
-            where={"specific_group": slot.specific_group})
+        course = db.course.find_first(where={"short_name": slot.specific_group})
 
-        if course and group:
-            db.slot.update(data={
-                "course": {
-                    "connect": {
-                        "id": course.id
-                    }
-                },
-                "group": {
-                    "connect": {
-                        "id": group.id
-                    }
-                }
-            }, where={"id": slot.id})
-        elif course:
+        if course:
             db.slot.update(data={
                 "course": {
                     "connect": {
@@ -144,12 +147,22 @@ def connect_slot_course_group():
                     }
                 }
             }, where={"id": slot.id})
-        elif group:
-            db.slot.update(data={
-                "group": {
-                    "connect": {
-                        "id": group.id
-                    }
-                }
-            }, where={"id": slot.id})
+    return {"message": "successful"}
+
+
+@router.get('/course_abbrevation_validgroup')
+def fill_course_abbrevation():
+    courses = db.course.find_many(
+        where={"is_elective": True},
+        include={"time_slots": True})
+    final_names = dict(MS_ELECTIVE_NAMES)
+    final_names.update(BS4_ELECTIVE_NAMES)
+    final_names.update(BS3_ELECTIVE_NAMES)
+    for course in courses:
+        if course.time_slots:
+            valid_group = course.time_slots[0].specific_group
+            db.course.update(data={
+                "valid_group": valid_group,
+                "short_name": final_names[course.description][0],
+            }, where={"id": course.id})
     return {"message": "successful"}
