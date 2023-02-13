@@ -268,3 +268,5 @@ def print_slot(slot):
 
 def get_day_of_the_week():
     return arrow.now(data.TIMEZONE).weekday()
+
+# \copy public."Slot" (id, instructor_name, room_number, start_time, end_time, course_id, type, group_id, specific_group, course_name) FROM '/Users/danielatonge/Downloads/week3_schedule/slot.csv' DELIMITER ',' CSV HEADER QUOTE '"' ESCAPE '''';

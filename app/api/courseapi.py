@@ -7,5 +7,5 @@ router = APIRouter(tags=["Courses"], prefix="/course")
 
 @router.get("/")
 def get_all_courses():
-    courses = db.course.find_many()
+    courses = db.course.find_many(order={"description": "asc"})
     return courses

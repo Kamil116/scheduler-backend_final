@@ -22,25 +22,32 @@ def get_slots(start: str = "", end: str = "", group: str = "", course: str = "",
             }
         )
         # group_with_time_slots
-        slots = group_with_time_slots.time_table
+        general_slots = group_with_time_slots.time_table
+        for slot in general_slots:
+            if arrow.get(slot.start_time) >= arrow.get(start) and arrow.get(slot.end_time) <= arrow.get(end):
+                slots.append(slot)
     elif course:
         course_time_slots = db.course.find_first(
             where={"description": course}, include={"time_slots": True})
-        slots = course_time_slots.time_slots
+        general_slots = course_time_slots.time_slots
+        for slot in general_slots:
+            if arrow.get(slot.start_time) >= arrow.get(start) and arrow.get(slot.end_time) <= arrow.get(end):
+                slots.append(slot)
     else:
         slots = db.slot.find_many(
             include={"course": True},
             where={
                 "start_time": {
-                    "gte": start if start else "2023-02-02T07:40:00+00:00"
+                    "gte": start if start else "2023-02-02T00:40:00+00:00"
                 },
                 "end_time": {
-                    "lte": end if end else "2023-02-03T07:40:00+00:00"
+                    "lte": end if end else "2023-02-03T00:40:00+00:00"
                 }
             }
         )
     return slots
 # "\\copy public.\"Slot\" (id, instructor_name, room_number, start_time, end_time, course_id, course_name, type, group_id, specific_group) FROM '/Users/danielatonge/Downloads/week3_schedule/slot.csv' DELIMITER ',' CSV HEADER QUOTE '\"' ESCAPE '''';""
+
 
 @router.post("/")
 def create_slot(slotInput: schemas.Slot):
