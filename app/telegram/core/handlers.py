@@ -143,7 +143,7 @@ def compose_attached_modules(set_proxy=False):
             schedule.run_pending()
             time.sleep(1)
 
-    bot.delete_my_commands()
-    bot.set_my_commands(commands=commands)
+    # bot.delete_my_commands()
+    # bot.set_my_commands(commands=commands)
     Thread(target=polling_telegram_bot_commands, daemon=True).start()
     Thread(target=pending_schedule, daemon=True).start()
