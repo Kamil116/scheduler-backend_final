@@ -29,7 +29,7 @@ def get_slots(start: str = "", end: str = "", group: str = "", course: str = "",
     elif course:
         course_time_slots = db.course.find_first(
             where={"description": course}, include={"time_slots": True})
-        general_slots = course_time_slots.time_slots
+        general_slots = course_time_slots.time_slots if course_time_slots else []
         for slot in general_slots:
             if arrow.get(slot.start_time) >= arrow.get(start) and arrow.get(slot.end_time) <= arrow.get(end):
                 slots.append(slot)
@@ -46,7 +46,8 @@ def get_slots(start: str = "", end: str = "", group: str = "", course: str = "",
             }
         )
     return slots
-# "\\copy public.\"Slot\" (id, instructor_name, room_number, start_time, end_time, course_id, course_name, type, group_id, specific_group) FROM '/Users/danielatonge/Downloads/week3_schedule/slot.csv' DELIMITER ',' CSV HEADER QUOTE '\"' ESCAPE '''';""
+# \copy public."Slot" (id, instructor_name, room_number, start_time, end_time, course_id, type, group_id, specific_group, course_name) FROM '/Users/danielatonge/Downloads/week3_schedule/slot.csv' DELIMITER ',' CSV HEADER QUOTE '"' ESCAPE '''';
+# \copy public."User" (id, created_at, updated_at, handle, group_id, remind_me, optional_course_id) FROM '/Users/danielatonge/Downloads/week3_schedule/user.csv' DELIMITER ',' CSV HEADER QUOTE '"' ESCAPE '''';
 
 
 @router.post("/")

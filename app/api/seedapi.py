@@ -23,6 +23,137 @@ def seed_group():
     return {"message": "successful"}
 
 
+@router.get('/fix_slots')
+def fix_slots():
+    groups = ['B22-CS-01', 'B22-CS-02', 'B22-CS-03', 'B22-CS-04', 'B22-CS-05',
+              'B22-CS-06', 'B22-DSAI-01', 'B22-DSAI-02', 'B22-DSAI-03', 'B22-DSAI-04',
+              'SD21-01', 'SD21-02', 'SD21-03', 'CS21-01', 'DS21-01', 'DS21-02', 'AAI21-01', 'RO21-01',
+              'B20-SD-01', 'B20-SD-02', 'B20-CS', 'B20-AI', 'B20-DS', 'B20-RO',
+              'B19-SD-01', 'B19-SD-02', 'B19-DS-01', 'B19-AI-01', 'B19-CS-01', 'B19-RO-01',
+              'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
+    slot = db.slot.delete_many(where={
+        "start_time": {
+            "gte": "2023-02-27T01:00:00.000Z"
+        },
+        "end_time": {
+            "lte": "2023-03-04T21:00:00.000Z",
+        },
+        "group_id": {
+            "not": None
+        },
+        "specific_group": {
+            "in": groups
+        }
+    })
+    print(slot)
+    return {"message": "successful"}
+
+
+@router.get('/generate_slot_for_next_week')
+def generate_slot_for_next_week():
+    groups = ['B22-CS-01', 'B22-CS-02', 'B22-CS-03', 'B22-CS-04', 'B22-CS-05',
+              'B22-CS-06', 'B22-DSAI-01', 'B22-DSAI-02', 'B22-DSAI-03', 'B22-DSAI-04',
+              'SD21-01', 'SD21-02', 'SD21-03', 'CS21-01', 'DS21-01', 'DS21-02', 'AAI21-01', 'RO21-01',
+              'B20-SD-01', 'B20-SD-02', 'B20-CS', 'B20-AI', 'B20-DS', 'B20-RO',
+              'B19-SD-01', 'B19-SD-02', 'B19-DS-01', 'B19-AI-01', 'B19-CS-01', 'B19-RO-01',
+              'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
+    slots = db.slot.find_many(where={
+        "start_time": {
+            "gte": "2023-02-20T01:00:00.000Z"
+        },
+        "end_time": {
+            "lte": "2023-02-25T20:00:00.000Z",
+        },
+        "group_id": {
+            "not": None
+        },
+        "specific_group": {
+            "in": groups
+        }
+    })
+    new_slots = list(map(lambda x: {
+        "instructor_name": x.instructor_name,
+        "room_number": x.room_number,
+        "start_time": arrow.get(x.start_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
+        "end_time": arrow.get(x.end_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
+        "course_id": x.course_id,
+        "course_name": x.course_name,
+        "type": x.type,
+        "group_id": x.group_id,
+        "specific_group": x.specific_group,
+    }, slots))
+    db.slot.create_many(data=new_slots)
+    return {"message": "successful"}
+
+
+@router.get('/create_slot')
+def create_slot():
+    groups = ['B22-CS-01', 'B22-CS-02', 'B22-CS-03', 'B22-CS-04', 'B22-CS-05',
+              'B22-CS-06', 'B22-DSAI-01', 'B22-DSAI-02', 'B22-DSAI-03', 'B22-DSAI-04',
+              'SD21-01', 'SD21-02', 'SD21-03', 'CS21-01', 'DS21-01', 'DS21-02', 'AAI21-01', 'RO21-01',
+              'B20-SD-01', 'B20-SD-02', 'B20-CS', 'B20-AI', 'B20-DS', 'B20-RO',
+              'B19-SD-01', 'B19-SD-02', 'B19-DS-01', 'B19-AI-01', 'B19-CS-01', 'B19-RO-01',
+              'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
+
+    selected_groups = [{"specific_group": 'M22-SNE-01', "group_id": "cldriyvl40000mz8j31jhbqkz"}]
+    start_time = "2023-03-04T16:45:00+03:00"
+    end_time = "2023-03-04T18:45:00+03:00"
+    instructor_name = "Anna Melikhova"
+    room_number = "OFFLINE"
+    course_id = "cldrjccwv0000mztjewprhuzf"
+    course_name = "Advanced Security"
+    type = "LEC"
+
+
+# "9:30 - 11:30 AS - Lecture
+# (Anna Melikhova - offline) "
+    new_slots = list(map(lambda x: {
+        "instructor_name": instructor_name,
+        "room_number": room_number,
+        "start_time": arrow.get(start_time).isoformat(),
+        "end_time": arrow.get(end_time).isoformat(),
+        "course_id": course_id,
+        "course_name": course_name,
+        "type": type,
+        "group_id": x["group_id"],
+        "specific_group": x["specific_group"],
+    }, selected_groups))
+    print(new_slots)
+    db.slot.create_many(data=new_slots)
+    return {"message": "successful"}
+
+
+@router.get('/delete_specific_slot')
+def delete_specific_slot():
+    groups = ['B22-CS-01', 'B22-CS-02', 'B22-CS-03', 'B22-CS-04', 'B22-CS-05',
+              'B22-CS-06', 'B22-DSAI-01', 'B22-DSAI-02', 'B22-DSAI-03', 'B22-DSAI-04',
+              'SD21-01', 'SD21-02', 'SD21-03', 'CS21-01', 'DS21-01', 'DS21-02', 'AAI21-01', 'RO21-01',
+              'B20-SD-01', 'B20-SD-02', 'B20-CS', 'B20-AI', 'B20-DS', 'B20-RO',
+              'B19-SD-01', 'B19-SD-02', 'B19-DS-01', 'B19-AI-01', 'B19-CS-01', 'B19-RO-01',
+              'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
+
+    selected_groups = [{"specific_group": 'M22-SE-01', "group_id": "cldhhy81g001omzwcez2x4byx"},
+                       {"specific_group": 'M22-SE-02', "group_id": "cldhhy8pg001qmzwccuyc547x"}]
+    start_time = "2023-02-27T01:40:00+03:00"
+    end_time = "2023-03-04T20:10:00+03:00"
+
+    slots = db.slot.delete_many(where={
+        "group_id": {
+            "in": ["cldhhy443001cmzwcdjoqazxa", "cldhhy4qy001emzwcim4em7ku", "cldhhy5dt001gmzwcjqgtye4o", "cldhhy61a001imzwcvvg74fe4", "cldhhy6pj001kmzwc9monseu0", "cldhhy7em001mmzwcn233fhin"]
+        },
+        "start_time": {
+            "gte": start_time,
+        },
+        "end_time": {
+            "lte": end_time,
+        },
+        "course_id": {
+            "in": ["cldhhzqrt003emzwcppqyu41u"]
+        }})
+    print(slots)
+    return {"message": "successful"}
+
+
 @router.get('/seed_course')
 def seed_course():
     # SNE_COURSES, MAIN_COURSES, ELECTIVE_COURSES
@@ -137,7 +268,8 @@ def connect_slot_course_group():
     slots = db.slot.find_many(where={"specific_group": {
         "in": ["RFL-INTER", "RFL-BEGIN-M1", "RFL-BEGIN-M2", "RFL-BEGIN-BACH"]}})
     for slot in slots:
-        course = db.course.find_first(where={"short_name": slot.specific_group})
+        course = db.course.find_first(
+            where={"short_name": slot.specific_group})
 
         if course:
             db.slot.update(data={
@@ -165,4 +297,30 @@ def fill_course_abbrevation():
                 "valid_group": valid_group,
                 "short_name": final_names[course.description][0],
             }, where={"id": course.id})
+    return {"message": "successful"}
+
+
+@router.get('/add_specific_slots')
+def add_specific_slots():
+    groups = [
+        {"name": 'SD21-01', "id": "cldhhxuhh000kmzwca922bvxd"},
+        {"name": 'SD21-02', "id": "cldhhxv4d000mmzwc16ukq2tt"},
+        {"name": 'SD21-03', "id": "cldhhxvt3000omzwcvy16sv9e"},
+        {"name": 'CS21-01', "id": "cldhhxvt3000omzwcvy16sv9e"},
+        {"name": 'DS21-01', "id": "cldhhxx3m000smzwczt5sep42"},
+        {"name": 'DS21-02', "id": "cldhhxxto000umzwcmvfekkym"},
+        {"name": 'AAI21-01', "id": "cldhhxygj000wmzwcy2mfv253"},]
+    for group in groups:
+        new_slot = {
+            "instructor_name": "Darko Bozhinoski",
+            "room_number": "105",
+            "start_time": "2023-02-24T08:00:00.000Z",
+            "end_time": "2023-02-24T09:30:00.000Z",
+            "course_id": "cldhhz421002kmzwcvgc87luy",
+            "course_name": "Databases",
+            "type": "LEC",
+            "group_id": group["id"],
+            "specific_group": group["name"],
+        }
+        db.slot.create(data=new_slot)
     return {"message": "successful"}
