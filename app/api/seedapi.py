@@ -33,10 +33,10 @@ def fix_slots():
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
     slot = db.slot.delete_many(where={
         "start_time": {
-            "gte": "2023-02-27T01:00:00.000Z"
+            "gte": "2023-03-06T01:00:00.000Z"
         },
         "end_time": {
-            "lte": "2023-03-04T21:00:00.000Z",
+            "lte": "2023-03-11T21:00:00.000Z",
         },
         "group_id": {
             "not": None
@@ -59,10 +59,10 @@ def generate_slot_for_next_week():
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
     slots = db.slot.find_many(where={
         "start_time": {
-            "gte": "2023-02-20T01:00:00.000Z"
+            "gte": "2023-02-27T01:00:00.000Z"
         },
         "end_time": {
-            "lte": "2023-02-25T20:00:00.000Z",
+            "lte": "2023-03-04T20:00:00.000Z",
         },
         "group_id": {
             "not": None
@@ -95,18 +95,22 @@ def create_slot():
               'B19-SD-01', 'B19-SD-02', 'B19-DS-01', 'B19-AI-01', 'B19-CS-01', 'B19-RO-01',
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
 
-    selected_groups = [{"specific_group": 'M22-SNE-01', "group_id": "cldriyvl40000mz8j31jhbqkz"}]
-    start_time = "2023-03-04T16:45:00+03:00"
-    end_time = "2023-03-04T18:45:00+03:00"
-    instructor_name = "Anna Melikhova"
-    room_number = "OFFLINE"
-    course_id = "cldrjccwv0000mztjewprhuzf"
-    course_name = "Advanced Security"
+    selected_groups = [
+        {"specific_group": 'B19-SD-01', "group_id": "cldhhy443001cmzwcdjoqazxa"},
+        {"specific_group": 'B19-SD-02', "group_id": "cldhhy4qy001emzwcim4em7ku"},
+        {"specific_group": 'B19-DS-01', "group_id": "cldhhy5dt001gmzwcjqgtye4o"},
+        {"specific_group": 'B19-AI-01', "group_id": "cldhhy61a001imzwcvvg74fe4"},
+        {"specific_group": 'B19-CS-01', "group_id": "cldhhy6pj001kmzwc9monseu0"},
+        {"specific_group": 'B19-RO-01', "group_id": "cldhhy7em001mmzwcn233fhin"},
+    ]
+    start_time = "2023-03-11T14:50:00+03:00"
+    end_time = "2023-03-11T16:20:00+03:00"
+    instructor_name = "Andrei Anisimov"
+    room_number = "105"
+    course_id = "cldhhzqrt003emzwcppqyu41u"
+    course_name = "Theoretical Sports - Physiology"
     type = "LEC"
 
-
-# "9:30 - 11:30 AS - Lecture
-# (Anna Melikhova - offline) "
     new_slots = list(map(lambda x: {
         "instructor_name": instructor_name,
         "room_number": room_number,
