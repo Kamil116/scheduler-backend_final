@@ -33,10 +33,10 @@ def fix_slots():
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
     slot = db.slot.delete_many(where={
         "start_time": {
-            "gte": "2023-03-06T01:00:00.000Z"
+            "gte": "2023-03-20T01:00:00.000Z"
         },
         "end_time": {
-            "lte": "2023-03-11T21:00:00.000Z",
+            "lte": "2023-03-25T21:00:00.000Z",
         },
         "group_id": {
             "not": None
@@ -59,10 +59,10 @@ def generate_slot_for_next_week():
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
     slots = db.slot.find_many(where={
         "start_time": {
-            "gte": "2023-02-27T01:00:00.000Z"
+            "gte": "2023-02-06T01:00:00.000Z"
         },
         "end_time": {
-            "lte": "2023-03-04T20:00:00.000Z",
+            "lte": "2023-03-11T20:00:00.000Z",
         },
         "group_id": {
             "not": None
@@ -74,8 +74,8 @@ def generate_slot_for_next_week():
     new_slots = list(map(lambda x: {
         "instructor_name": x.instructor_name,
         "room_number": x.room_number,
-        "start_time": arrow.get(x.start_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
-        "end_time": arrow.get(x.end_time).to(TIMEZONE).shift(weeks=+1).isoformat(),
+        "start_time": arrow.get(x.start_time).to(TIMEZONE).shift(weeks=+2).isoformat(),
+        "end_time": arrow.get(x.end_time).to(TIMEZONE).shift(weeks=+2).isoformat(),
         "course_id": x.course_id,
         "course_name": x.course_name,
         "type": x.type,
@@ -96,20 +96,23 @@ def create_slot():
               'M22-SE-01', 'M22-SE-02', 'M22-DS-01', 'M22-RO-01', 'M22-TE-01']
 
     selected_groups = [
-        {"specific_group": 'B19-SD-01', "group_id": "cldhhy443001cmzwcdjoqazxa"},
-        {"specific_group": 'B19-SD-02', "group_id": "cldhhy4qy001emzwcim4em7ku"},
-        {"specific_group": 'B19-DS-01', "group_id": "cldhhy5dt001gmzwcjqgtye4o"},
-        {"specific_group": 'B19-AI-01', "group_id": "cldhhy61a001imzwcvvg74fe4"},
-        {"specific_group": 'B19-CS-01', "group_id": "cldhhy6pj001kmzwc9monseu0"},
-        {"specific_group": 'B19-RO-01', "group_id": "cldhhy7em001mmzwcn233fhin"},
+        # {"specific_group": 'B19-SD-01', "group_id": "cldhhy443001cmzwcdjoqazxa"},
+        # {"specific_group": 'B19-SD-02', "group_id": "cldhhy4qy001emzwcim4em7ku"},
+        # {"specific_group": 'B19-DS-01', "group_id": "cldhhy5dt001gmzwcjqgtye4o"},
+        # {"specific_group": 'B19-AI-01', "group_id": "cldhhy61a001imzwcvvg74fe4"},
+        # {"specific_group": 'B19-CS-01', "group_id": "cldhhy6pj001kmzwc9monseu0"},
+        # {"specific_group": 'B19-RO-01', "group_id": "cldhhy7em001mmzwcn233fhin"},
+
+        # {"specific_group": 'DS21-01', "group_id": "cldhhxx3m000smzwczt5sep42"},
+        # {"specific_group": 'DS21-02', "group_id": "cldhhxxto000umzwcmvfekkym"},
     ]
-    start_time = "2023-03-11T14:50:00+03:00"
-    end_time = "2023-03-11T16:20:00+03:00"
-    instructor_name = "Andrei Anisimov"
-    room_number = "105"
-    course_id = "cldhhzqrt003emzwcppqyu41u"
-    course_name = "Theoretical Sports - Physiology"
-    type = "LEC"
+    start_time = "2023-03-21T18:00:00+03:00"
+    end_time = "2023-03-21T19:30:00+03:00"
+    instructor_name = "Yusuf Mesbah"
+    room_number = "321"
+    course_id = "clfgj3ek7000emz9j2kyhkr3x"
+    course_name = "Nature Inspired Computing"
+    type = "LAB"
 
     new_slots = list(map(lambda x: {
         "instructor_name": instructor_name,

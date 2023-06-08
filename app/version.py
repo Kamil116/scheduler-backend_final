@@ -16,7 +16,7 @@ def version_one():
     router.include_router(courseapi.router)
     router.include_router(slotapi.router)
 
-    # router.include_router(seedapi.router)
+    router.include_router(seedapi.router)
 
 
 
