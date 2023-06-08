@@ -16,7 +16,3 @@ $ pip3 install -r requirement.txt
 $ uvicorn app.main:app --reload
 
 ```
-
-### Documentation illustration
-
-![Api documentation](https://github.com/Danielatonge/moolax-backend/raw/main/doc/img/api-doc.png)
