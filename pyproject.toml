@@ -1,5 +1,0 @@
-[tool.pyright]
-include = [
-    "app/main.py",
-]
-
