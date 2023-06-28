@@ -3,11 +3,9 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
-
 
 from config_reader import config
-from handlers import fsm, common
+from handlers import fsm
 
 # States System
 # Intial state: `start`
@@ -28,14 +26,12 @@ async def main():
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
 
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher()
     bot = Bot(config.bot_token.get_secret_value())
 
     dp.include_router(fsm.router)
-    dp.include_router(common.router)
 
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
-
 
 
 if __name__ == "__main__":

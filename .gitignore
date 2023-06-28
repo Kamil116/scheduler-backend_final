@@ -8,3 +8,4 @@ src/test.py
 
 # bot 
 src/__pycache__
+src/handlers/__pycache__
