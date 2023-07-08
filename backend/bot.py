@@ -3,7 +3,6 @@ import logging
 
 from appSchedulerMiddleware import ScheduleMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import apsched
 from aiogram import Bot, Dispatcher
 
 from config_reader import config

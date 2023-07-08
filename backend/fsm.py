@@ -3,23 +3,24 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from backend.db import Database
+from backend.db import StudentsInfoDatabase
+from backend.parsedDataToDatabase import coursesDatabase
 from bot import bot
-from datetime import datetime
+from datetime import datetime, timedelta
 from apsched import send_notification
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from helpers import make_row_keyboard
 
 router = Router()
-db = Database('users.db')
+db = StudentsInfoDatabase('users.db')
 
-available_courses = ['BS19', 'BS20', 'BS21', 'BS22', 'MS1', 'MS2']
+available_courses = ['B19', 'B20', 'B21', 'B22', 'MS1', 'MS2']
 available_courses_marked = []
 for course in available_courses:
     available_courses_marked.append(course + " ✅")
 
-# TODO: match course and studying groups. For example, in BS19 we have only 6 groups.
+# TODO: match course and studying groups. For example, in B19 we have only 6 groups.
 available_groups = ['CS-01', 'CS-02', 'CS-03', 'CS-04', 'CS-05']
 available_groups_marked = []
 for group in available_groups:
@@ -154,19 +155,33 @@ async def select_group(message: Message, state: FSMContext):
 
 @router.message(SettingsStates.select_group, F.text.in_(available_groups))
 async def select_group_handler(message: Message, state: FSMContext, apscheduler: AsyncIOScheduler):
-    # Write selected group to database
-
-    # if message.from_user.id not in users_settings:
-    #     users_settings[message.from_user.id] = UserSettings()
-    # users_settings[message.from_user.id].select_group(message.text)
-
     # Saving info about group in DB
     db.update_group(message.text, message.chat.id)
 
-    # sending notification when user is registered
-    if db.get_group(message.from_user.id) != '' and db.get_course(message.from_user.id) != '':
-        apscheduler.add_job(send_notification, trigger='cron', hour=11, minute=28,
-                            start_date=datetime.now(), kwargs={'bot': bot, 'chat_id': message.from_user.id})
+    cur_user_course = db.get_course(message.from_user.id)
+    cur_user_group = db.get_group(message.from_user.id)
+
+    # sending notification when we have user's course and study group
+    courses = coursesDatabase.get_courses()
+
+    for cur_course in courses:
+        if cur_user_course + '-' + cur_user_group == cur_course[3]:
+            if db.get_group(message.from_user.id) != '' and db.get_course(message.from_user.id) != '':
+                # getting date and time
+                date_and_time = cur_course[1].split("T")
+                date = date_and_time[0]
+                year = int(date.split('-')[0])
+                month = int(date.split('-')[1])
+                day = int(date.split('-')[2])
+                time = date_and_time[1]
+                hour = int(time.split(':')[0])
+                minute = int(time.split(':')[1])
+
+                apscheduler.add_job(send_notification, trigger='date',
+                                    run_date=datetime(year, month, day, hour, minute, 0) + timedelta(minutes=-15),
+                                    misfire_grace_time=59,
+                                    kwargs={'bot': bot, 'chat_id': message.from_user.id, 'title': cur_course[0],
+                                            'room': cur_course[2]})
 
     await message.answer("Group selected!", reply_markup=ReplyKeyboardRemove())
     await start(message, state)

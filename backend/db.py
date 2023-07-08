@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class Database:
+class StudentsInfoDatabase:
     def __init__(self, db_file):
         self.connection = sqlite3.connect(db_file)
         self.cursor = self.connection.cursor()
@@ -10,8 +10,9 @@ class Database:
 
     def user_exists(self, user_id):
         with self.connection:
-            result = self.cursor.execute("SELECT 1 FROM profile where user_id == '{key}'".format(key=user_id)).fetchone()
-            return bool(len(result))
+            result = self.cursor.execute(
+                "SELECT 1 FROM profile where user_id == '{key}'".format(key=user_id)).fetchone()
+            return result != None
 
     def add_user(self, user_id):
         with self.connection:
@@ -37,3 +38,22 @@ class Database:
         self.cursor.execute('''UPDATE profile SET st_group = ? WHERE user_id = ?''', (text, user_id))
         self.connection.commit()
 
+
+class CoursesInfoDatabase:
+    def __init__(self, db_file):
+        self.connection = sqlite3.connect(db_file)
+        self.cursor = self.connection.cursor()
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS courses(title TEXT,"
+            " start_time TEXT, room TEXT, target_course TEXT, instructor Text)")
+        self.connection.commit()
+
+    def add_course(self, title, start, room, target_course, instructor):
+        with self.connection:
+            return self.cursor.execute("INSERT INTO courses VALUES(?, ?, ?, ?, ?)",
+                                       (title, start, room, target_course, instructor))
+
+    def get_courses(self):
+        with self.connection:
+            return self.cursor.execute(
+                "SELECT * FROM courses").fetchall()
