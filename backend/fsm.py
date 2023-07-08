@@ -1,14 +1,18 @@
-import sqlite3
-
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
+from backend.db import Database
+from bot import bot
+from datetime import datetime
+from apsched import send_notification
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from helpers import make_row_keyboard
 
 router = Router()
+db = Database('users.db')
 
 available_courses = ['BS19', 'BS20', 'BS21', 'BS22', 'MS1', 'MS2']
 available_courses_marked = []
@@ -29,13 +33,10 @@ start_menu = ['Select course', 'Select group', 'Select lectures', 'Manage notifi
 
 
 def get_marked_courses(message: Message):
-
     # add mark to selected courses
     local_courses = available_courses.copy()
 
-    user_course = \
-        cursor.execute(
-            "SELECT course FROM profile WHERE user_id == '{key}'".format(key=message.from_user.id)).fetchone()[0]
+    user_course = db.get_course(message.from_user.id)
 
     if user_course != '':
         local_courses[local_courses.index(user_course)] += " ✅"
@@ -47,9 +48,7 @@ def get_marked_groups(message: Message):
     # add mark to selected groups
     local_groups = available_groups.copy()
 
-    user_group = \
-        cursor.execute(
-            "SELECT st_group FROM profile WHERE user_id == '{key}'".format(key=message.from_user.id)).fetchone()[0]
+    user_group = db.get_group(message.from_user.id)
 
     if user_group != '':
         local_groups[local_groups.index(
@@ -78,22 +77,8 @@ class SettingsStates(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    global connect, cursor
-    # creating DB and connecting
-    connect = sqlite3.connect('users.db')
-    cursor = connect.cursor()
-
-    # creating table
-    cursor.execute("CREATE TABLE IF NOT EXISTS profile(user_id TEXT PRIMARY KEY, course TEXT, st_group TEXT)")
-    connect.commit()
-
-    people_id = message.from_user.id
-    data = cursor.execute("SELECT 1 FROM profile where user_id == '{key}'".format(key=people_id)).fetchone()
-
-    # If user is not in DB, we will ask him to input data
-    if data is None:
-        cursor.execute("INSERT INTO profile VALUES(?, ?, ?)", (people_id, '', ''))
-        connect.commit()
+    if not db.user_exists(message.from_user.id):
+        db.add_user(message.from_user.id)
         await state.set_state(SettingsStates.start)
         await message.answer("You are not registered. Please send your course and group:",
                              reply_markup=make_row_keyboard(start_menu))
@@ -134,8 +119,7 @@ async def select_course_handler(message: Message, state: FSMContext):
     # users_settings[message.from_user.id].select_course(message.text)
 
     # Saving info about course in DB
-    cursor.execute('''UPDATE profile SET course = ? WHERE user_id = ?''', (message.text, message.chat.id))
-    connect.commit()
+    db.update_course(message.text, message.chat.id)
 
     await message.answer("Course selected!", reply_markup=ReplyKeyboardRemove())
     await start(message, state)
@@ -169,7 +153,7 @@ async def select_group(message: Message, state: FSMContext):
 
 
 @router.message(SettingsStates.select_group, F.text.in_(available_groups))
-async def select_group_handler(message: Message, state: FSMContext):
+async def select_group_handler(message: Message, state: FSMContext, apscheduler: AsyncIOScheduler):
     # Write selected group to database
 
     # if message.from_user.id not in users_settings:
@@ -177,8 +161,12 @@ async def select_group_handler(message: Message, state: FSMContext):
     # users_settings[message.from_user.id].select_group(message.text)
 
     # Saving info about group in DB
-    cursor.execute('''UPDATE profile SET st_group = ? WHERE user_id = ?''', (message.text, message.chat.id))
-    connect.commit()
+    db.update_group(message.text, message.chat.id)
+
+    # sending notification when user is registered
+    if db.get_group(message.from_user.id) != '' and db.get_course(message.from_user.id) != '':
+        apscheduler.add_job(send_notification, trigger='cron', hour=11, minute=28,
+                            start_date=datetime.now(), kwargs={'bot': bot, 'chat_id': message.from_user.id})
 
     await message.answer("Group selected!", reply_markup=ReplyKeyboardRemove())
     await start(message, state)
@@ -200,6 +188,7 @@ async def select_group_handler(message: Message, state: FSMContext):
 async def select_group_handler(message: Message, state: FSMContext):
     await message.answer("Invalid group", reply_markup=make_row_keyboard(available_groups))
     await start(message, state)
+
 
 #
 # # ------------------- Select lectures -------------------
