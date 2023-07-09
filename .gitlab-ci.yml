@@ -29,6 +29,9 @@ docker-build:
     - echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
     - docker build -t arushin/scheduler-backend:latest .
     - docker push registry.gitlab.com/diazzzu/angimehubbackend
+  dependencies:
+    - pytest
+    - pylint
   only:
     - development
     - pushes
