@@ -36,3 +36,4 @@ typing_extensions==4.6.3
 tzlocal==5.0.1
 yarl==1.9.2
 yt-dlp==2023.3.4
+pytest-cov==4.1.0
