@@ -1,0 +1,9 @@
+stages:
+  - linting
+pylint:
+  stage: linting
+  image: registry.gilab.com/mafda/python-linting
+  script:
+    - flake8 .
+  only:
+    - merge_requests
