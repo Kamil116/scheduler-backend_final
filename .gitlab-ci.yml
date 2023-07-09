@@ -16,3 +16,5 @@ pytest:
     - pip install -r requirements.txt
   script:
     - pytest backend/test.py
+  only:
+    - pushes
