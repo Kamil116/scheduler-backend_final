@@ -3,8 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from backend.db import StudentsInfoDatabase
-from backend.parsedDataToDatabase import coursesDatabase
+from db import StudentsInfoDatabase
+from parsedDataToDatabase import coursesDatabase
 from bot import bot
 from datetime import datetime, timedelta
 from apsched import send_notification
@@ -30,7 +30,8 @@ available_lectures = ['Sport', 'Math', 'English', 'Programming', 'History']
 available_lectures_marked = []
 for lecture in available_lectures:
     available_lectures_marked.append(lecture + " ✅")
-start_menu = ['Select course', 'Select group', 'Select lectures', 'Manage notifications']
+start_menu = ['Select course', 'Select group',
+              'Select lectures', 'Manage notifications']
 
 
 def get_marked_courses(message: Message):
@@ -178,7 +179,8 @@ async def select_group_handler(message: Message, state: FSMContext, apscheduler:
                 minute = int(time.split(':')[1])
 
                 apscheduler.add_job(send_notification, trigger='date',
-                                    run_date=datetime(year, month, day, hour, minute, 0) + timedelta(minutes=-15),
+                                    run_date=datetime(
+                                        year, month, day, hour, minute, 0) + timedelta(minutes=-15),
                                     misfire_grace_time=59,
                                     kwargs={'bot': bot, 'chat_id': message.from_user.id, 'title': cur_course[0],
                                             'room': cur_course[2]})
