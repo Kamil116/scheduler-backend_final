@@ -3,6 +3,8 @@ stages:
   - testing
   - build
   - deploy
+services:
+  - docker:dind
 
 pylint:
   stage: linting
@@ -25,6 +27,7 @@ pytest:
 
 docker-build:
   stage: build
+  image: docker:latest
   script:
     - echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
     - docker build -t arushin/scheduler-backend:latest .
