@@ -1,5 +1,6 @@
 stages:
   - linting
+  - testing
 pylint:
   stage: linting
   image: registry.gitlab.com/mafda/python-linting
@@ -8,3 +9,10 @@ pylint:
   only:
     - merge_requests
     - pushes
+pytest:
+  stage: testing
+  image: python:3.11
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - pytest backend/test.py
