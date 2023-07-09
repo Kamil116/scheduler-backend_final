@@ -79,9 +79,8 @@ class SettingsStates(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    # if not db.user_exists(message.from_user.id):
-    #     db.add_user(message.from_user.id)
-    if True:
+    if not db.user_exists(message.from_user.id):
+        db.add_user(message.from_user.id)
         await state.set_state(SettingsStates.start)
         await message.answer("You are not registered. Please send your course and group:",
                              reply_markup=make_row_keyboard(start_menu))
