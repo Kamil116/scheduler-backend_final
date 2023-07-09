@@ -2,7 +2,7 @@ stages:
   - linting
 pylint:
   stage: linting
-  image: registry.gilab.com/mafda/python-linting
+  image: registry.gitlab.com/mafda/python-linting
   script:
     - flake8 .
   only:
