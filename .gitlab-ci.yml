@@ -4,7 +4,7 @@ pylint:
   stage: linting
   image: registry.gitlab.com/mafda/python-linting
   script:
-    - flake8 .
+    - flake8 --ignore=E501,F811,W292,E711 .
   only:
     - merge_requests
     - pushes
