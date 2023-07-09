@@ -53,7 +53,7 @@ deploy:
     - apk update && apk add gettext
   script:
     - scp -o StrictHostKeyChecking=no docker-compose.yaml "$SERVER_USERNAME"@"$SERVER_IP":~/
-    - envsubst < deploy.sh | ssh -o StrictHostKeyChecking=no "$SERVER_USERNAME"@"$SERVER_IP" sh
+    #- envsubst < deploy.sh | ssh -o StrictHostKeyChecking=no "$SERVER_USERNAME"@"$SERVER_IP" sh
   only:
     - development
     - pushes
