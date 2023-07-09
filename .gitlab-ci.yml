@@ -1,6 +1,9 @@
 stages:
   - linting
   - testing
+  - build
+  - deploy
+
 pylint:
   stage: linting
   image: registry.gitlab.com/mafda/python-linting
@@ -9,12 +12,46 @@ pylint:
   only:
     - merge_requests
     - pushes
+
 pytest:
   stage: testing
   image: python:3.11
   before_script:
-    - pip install -r --no-use-pep517 requirements.txt
+    - pip install -r requirements.txt
   script:
     - pytest backend/test.py
   only:
     - pushes
+
+docker-build:
+  stage: build
+  script:
+    - echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+    - docker build -t arushin/scheduler-backend:latest .
+    - docker push registry.gitlab.com/diazzzu/angimehubbackend
+  only:
+    - development
+    - pushes
+
+
+deploy:
+  stage: deploy
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$EC2_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - apk update && apk add bash
+    - apk update && apk add gettext
+  script:
+    - scp -o StrictHostKeyChecking=no docker-compose.yaml "$SERVER_USERNAME"@"$SERVER_IP":~/
+    - envsubst < deploy.sh | ssh -o StrictHostKeyChecking=no "$SERVER_USERNAME"@"$SERVER_IP" sh
+  only:
+    - development
+    - pushes
+  dependencies:
+    - docker-build
+
+
