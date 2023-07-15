@@ -66,16 +66,6 @@ def get_marked_groups(message: Message):
     return local_groups
 
 
-# def get_marked_lectures(message: Message):
-#     # add mark to selected lectures
-#     local_lectures = available_lectures.copy()
-#
-#     for lecture in users_settings[message.from_user.id].get_lectures():
-#         local_lectures[local_lectures.index(lecture)] += " ✅"
-#
-#     return local_lectures
-
-
 class MenuStates(StatesGroup):
     start = State()
     day = State()
