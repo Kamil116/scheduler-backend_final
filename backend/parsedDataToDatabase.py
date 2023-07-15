@@ -1,10 +1,10 @@
-from backend import db
+import db
 import json
 
 coursesDatabase = db.CoursesInfoDatabase('courses.db')
 # coursesDatabase = db.CoursesInfoDatabase('test.db')
 #
-json_file = '../output.json'
+json_file = 'output.json'
 
 with open(json_file) as json_data:
     data = json.load(json_data)

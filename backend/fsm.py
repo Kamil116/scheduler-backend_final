@@ -3,8 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from backend.db import StudentsInfoDatabase
-from backend.parsedDataToDatabase import coursesDatabase
+from db import StudentsInfoDatabase
+from parsedDataToDatabase import coursesDatabase
 from bot import bot
 from datetime import datetime, timedelta
 from apsched import send_notification
@@ -30,8 +30,9 @@ available_lectures = ['Sport', 'Math', 'English', 'Programming', 'History']
 available_lectures_marked = []
 for lecture in available_lectures:
     available_lectures_marked.append(lecture + " ✅")
-start_menu = ['Select course', 'Select group',
-              'Select lectures', 'Manage notifications']
+
+start_menu = ['Today', 'Week', 'Month', 'Settings']
+settings_menu = ['Select course', 'Select group', 'Manage notifications']
 
 
 def get_marked_courses(message: Message):
@@ -40,8 +41,11 @@ def get_marked_courses(message: Message):
 
     user_course = db.get_course(message.from_user.id)
 
-    if user_course != '':
-        local_courses[local_courses.index(user_course)] += " ✅"
+    # if user_course != '':
+    #     local_courses[local_courses.index(user_course)] += " ✅"
+
+    for course in local_courses:
+        course += " ✅"
 
     return local_courses
 
@@ -52,9 +56,12 @@ def get_marked_groups(message: Message):
 
     user_group = db.get_group(message.from_user.id)
 
-    if user_group != '':
-        local_groups[local_groups.index(
-            user_group)] += " ✅"
+    # if user_group != '':
+    #     local_groups[local_groups.index(
+    #         user_group)] += " ✅"
+
+    for group in local_groups:
+        group += " ✅"
 
     return local_groups
 
@@ -69,43 +76,92 @@ def get_marked_groups(message: Message):
 #     return local_lectures
 
 
+class MenuStates(StatesGroup):
+    start = State()
+    day = State()
+    week = State()
+    month = State()
+    settings = State()
+
+
 class SettingsStates(StatesGroup):
     select_course = State()
     select_group = State()
     select_lectures = State()
     manage_notifications = State()
-    start = State()
+
+# ------------------- Menu States Logic -------------------
 
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
+    await state.set_state(MenuStates.start)
     if not db.user_exists(message.from_user.id):
         db.add_user(message.from_user.id)
-        await state.set_state(SettingsStates.start)
         await message.answer("You are not registered. Please send your course and group:",
                              reply_markup=make_row_keyboard(start_menu))
     else:
-        await state.set_state(SettingsStates.start)
         await message.answer("Please select action:", reply_markup=make_row_keyboard(start_menu))
 
 
-@router.message(SettingsStates.start, F.text.in_(start_menu))
+@router.message(MenuStates.start, F.text.in_(start_menu))
 async def start_handler(message: Message, state: FSMContext):
-    if message.text == "Select course":
-        await select_course(message, state)
-    elif message.text == "Select group":
-        await select_group(message, state)
-    # elif message.text == "Select lectures":
-    #     await select_lectures(message, state)
-    elif message.text == "Manage notifications":
-        await manage_notifications(message, state)
-    else:
-        await message.answer("Invalid action", reply_markup=make_row_keyboard(start_menu))
+    match message.text:
+        case "Today":
+            await today(message, state)
+        case "Week":
+            await week(message, state)
+        case "Month":
+            await month(message, state)
+        case "Settings":
+            await settings(message, state)
+        case _:
+            await message.answer("Invalid action", reply_markup=make_row_keyboard(start_menu))
 
+
+@router.message(Command("Today"))
+async def today(message: Message, state: FSMContext):
+    await message.answer("Today")
+    await start(message, state)
+
+
+@router.message(Command("Week"))
+async def week(message: Message, state: FSMContext):
+    await message.answer("Week")
+    await start(message, state)
+
+
+@router.message(Command("Month"))
+async def month(message: Message, state: FSMContext):
+    await message.answer("Month")
+    await start(message, state)
+
+
+@router.message(Command("Settings"))
+async def settings(message: Message, state: FSMContext):
+    await state.set_state(MenuStates.settings)
+    await message.answer("Select option:", reply_markup=make_row_keyboard(settings_menu))
+
+
+@router.message(MenuStates.settings, F.text.in_(settings_menu))
+async def settings_handler(message: Message, state: FSMContext):
+    match message.text:
+        case "Select course":
+            await select_course(message, state)
+        case "Select group":
+            await select_group(message, state)
+        case "Manage notifications":
+            await manage_notifications(message, state)
+
+
+@router.message(MenuStates.settings)
+async def settings_handler(message: Message, state: FSMContext):
+    await message.answer("Invalid action", reply_markup=make_row_keyboard(settings_menu))
 
 # ------------------- Select course -------------------
 
-@router.message(Command("select_course"))
+
+@router.message(Command("Select course"))
 async def select_course(message: Message, state: FSMContext):
     available_courses_marked = get_marked_courses(message)
     await message.answer("Please select course:", reply_markup=make_row_keyboard(available_courses_marked))
@@ -114,11 +170,7 @@ async def select_course(message: Message, state: FSMContext):
 
 @router.message(SettingsStates.select_course, F.text.in_(available_courses))
 async def select_course_handler(message: Message, state: FSMContext):
-    # Write selected course to database
-
-    # if message.from_user.id not in users_settings:
-    #     users_settings[message.from_user.id] = UserSettings()
-    # users_settings[message.from_user.id].select_course(message.text)
+    '''Write course to DB and send message to user'''
 
     # Saving info about course in DB
     db.update_course(message.text, message.chat.id)
@@ -127,26 +179,39 @@ async def select_course_handler(message: Message, state: FSMContext):
     await start(message, state)
 
 
-# # if course was marked with ✅, remove it from user settings
-# @router.message(SettingsStates.select_course, F.text.in_(available_courses_marked))
-# async def select_course_handler(message: Message, state: FSMContext):
-#     # Write selected course to database
-#     course = message.text.split(" ")[0]  # remove ✅
-#     users_settings[message.from_user.id].remove_course(course)
-#
-#     await message.answer("Course deleted!", reply_markup=ReplyKeyboardRemove())
-#     await start(message, state)
-
-
 # Incorrect course case
 @router.message(SettingsStates.select_course)
-async def select_course_handler(message: Message, state: FSMContext):
+async def select_course_handler(message: Message, state: FSMContext, apscheduler: AsyncIOScheduler):
+    cur_user_course = db.get_course(message.from_user.id)
+    cur_user_group = db.get_group(message.from_user.id)
+
+    # sending notification when we have user's course and study group
+    courses = coursesDatabase.get_courses()
+
+    for cur_course in courses:
+        if cur_user_course + '-' + cur_user_group == cur_course[3]:
+            if db.get_group(message.from_user.id) != '' and db.get_course(message.from_user.id) != '':
+                # getting date and time
+                date_and_time = cur_course[1].split("T")
+                date = date_and_time[0]
+                year = int(date.split('-')[0])
+                month = int(date.split('-')[1])
+                day = int(date.split('-')[2])
+                time = date_and_time[1]
+                hour = int(time.split(':')[0])
+                minute = int(time.split(':')[1])
+
+                apscheduler.add_job(send_notification, trigger='date',
+                                    run_date=datetime(
+                                        year, month, day, hour, minute, 0) + timedelta(minutes=-15),
+                                    misfire_grace_time=59,
+                                    kwargs={'bot': bot, 'chat_id': message.from_user.id, 'title': cur_course[0],
+                                            'room': cur_course[2]})
     await message.answer("Invalid course", reply_markup=make_row_keyboard(available_courses))
     await start(message, state)
 
 
 # ------------------- Select group -------------------
-
 @router.message(Command("select_group"))
 async def select_group(message: Message, state: FSMContext):
     available_groups_marked = get_marked_groups(message)
@@ -189,17 +254,6 @@ async def select_group_handler(message: Message, state: FSMContext, apscheduler:
     await start(message, state)
 
 
-# # if group was marked with ✅, remove it from user settings
-# @router.message(SettingsStates.select_group, F.text.in_(available_groups_marked))
-# async def select_group_handler(message: Message, state: FSMContext):
-#     # Write selected course to database
-#     group = message.text.split(" ")[0]  # remove ✅
-#     users_settings[message.from_user.id].remove_group(group)
-#
-#     await message.answer("Group deleted!", reply_markup=ReplyKeyboardRemove())
-#     await start(message, state)
-
-
 # Incorrect group case
 @router.message(SettingsStates.select_group)
 async def select_group_handler(message: Message, state: FSMContext):
@@ -207,59 +261,30 @@ async def select_group_handler(message: Message, state: FSMContext):
     await start(message, state)
 
 
-#
-# # ------------------- Select lectures -------------------
-#
-# @router.message(Command("select_lectures"))
-# async def select_lectures(message: Message, state: FSMContext):
-#     available_lectures_marked = get_marked_lectures(message)
-#     await message.answer("Select lectures", reply_markup=make_row_keyboard(available_lectures_marked))
-#     await state.set_state(SettingsStates.select_lectures)
-#
-#
-# @router.message(SettingsStates.select_lectures, F.text.in_(available_lectures))
-# async def select_lectures_handler(message: Message, state: FSMContext):
-#     # Logic for selecting lectures
-#     users_settings[message.from_user.id].add_lecture(message.text)
-#     await message.answer("Lectures selected!", reply_markup=ReplyKeyboardRemove())
-#     await start(message, state)
-#
-#
-# @router.message(SettingsStates.select_lectures, F.text.in_(available_lectures_marked))
-# async def select_lectures_handler(message: Message, state: FSMContext):
-#     # Logic for selecting lectures
-#     lecture = message.text.split(" ")[0]
-#     users_settings[message.from_user.id].remove_lecture(lecture)
-#     await message.answer("Lecture deleted!", reply_markup=ReplyKeyboardRemove())
-#     await start(message, state)
-#
-#
-# @router.message(SettingsStates.select_lectures)
-# async def select_lectures_handler(message: Message):
-#     await message.answer("Invalid lectures", reply_markup=make_row_keyboard(available_lectures))
-#
-
 # ------------------- Manage notifications -------------------
 
 
-@router.message(Command("manage_notifications"))
+@router.message(Command("Manage notifications"))
 async def manage_notifications(message: Message, state: FSMContext):
     await message.answer("Manage notifications", reply_markup=make_row_keyboard(["Enable", "Disable"]))
     await state.set_state(SettingsStates.manage_notifications)
 
 
-@router.message(SettingsStates.manage_notifications, F.text.in_(["Enable", "Disable"]))
+@router.message(SettingsStates.manage_notifications, F.text.in_(["Enable"]))
 async def manage_notifications_handler(message: Message, state: FSMContext):
     # Logic for managing notifications
-    await message.answer("Notifications managed", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Notifications are enabled!", reply_markup=ReplyKeyboardRemove())
+    await start(message, state)
+
+
+@router.message(SettingsStates.manage_notifications, F.text.in_(["Disable"]))
+async def manage_notifications_handler(message: Message, state: FSMContext):
+    # Logic for managing notifications
+    await message.answer("Notifications are disabled!", reply_markup=ReplyKeyboardRemove())
     await start(message, state)
 
 
 @router.message(SettingsStates.manage_notifications)
-async def manage_notifications_handler(message: Message):
+async def manage_notifications_handler(message: Message, state: FSMContext):
     await message.answer("Invalid action", reply_markup=make_row_keyboard(["Enable", "Disable"]))
-    await start(message, state)
-
-
-if __name__ == "__main__":
-    asyncio.run(dp.start_polling())
+    await state.set_state(SettingsStates.manage_notifications)
