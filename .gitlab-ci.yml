@@ -1,0 +1,69 @@
+stages:
+  - linting
+  - testing
+  - build
+  - deploy
+services:
+  - docker:dind
+
+pylint:
+  stage: linting
+  image: registry.gitlab.com/mafda/python-linting
+  script:
+    - flake8 --ignore=E501,F811,W292,E711,F821,F401 .
+  only:
+    - merge_requests
+    - pushes
+
+pytest:
+  stage: testing
+  image: python:3.11
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - pytest --cov --cov-report term --cov-report xml:coverage.xml backend/test.py
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  only:
+    - pushes
+
+docker-build:
+  stage: build
+  image: docker:latest
+  script:
+    - echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+    - docker build -t arushin/scheduler-backend:latest .
+    - docker push arushin/scheduler-backend:latest
+  dependencies:
+    - pytest
+    - pylint
+  only:
+    - development
+    - pushes
+
+
+deploy:
+  stage: deploy
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$EC2_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - apk update && apk add bash
+    - apk update && apk add gettext
+  script:
+    - scp -o StrictHostKeyChecking=no docker-compose.yml "$SERVER_USERNAME"@"$SERVER_IP":~/
+    - envsubst < deploy.sh | ssh -o StrictHostKeyChecking=no "$SERVER_USERNAME"@"$SERVER_IP" sh
+  only:
+    - development
+    - pushes
+  dependencies:
+    - docker-build
+
+

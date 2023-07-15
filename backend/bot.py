@@ -6,7 +6,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Bot, Dispatcher
 
 from config_reader import config
-from backend import fsm
+import fsm
 
 # States System
 # Intial state: `start`

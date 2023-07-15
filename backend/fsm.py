@@ -30,7 +30,8 @@ available_lectures = ['Sport', 'Math', 'English', 'Programming', 'History']
 available_lectures_marked = []
 for lecture in available_lectures:
     available_lectures_marked.append(lecture + " ✅")
-start_menu = ['Select course', 'Select group', 'Select lectures', 'Manage notifications']
+start_menu = ['Select course', 'Select group',
+              'Select lectures', 'Manage notifications']
 
 
 def get_marked_courses(message: Message):
@@ -78,8 +79,9 @@ class SettingsStates(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    if not db.user_exists(message.from_user.id):
-        db.add_user(message.from_user.id)
+    # if not db.user_exists(message.from_user.id):
+    #     db.add_user(message.from_user.id)
+    if True:
         await state.set_state(SettingsStates.start)
         await message.answer("You are not registered. Please send your course and group:",
                              reply_markup=make_row_keyboard(start_menu))
@@ -178,7 +180,8 @@ async def select_group_handler(message: Message, state: FSMContext, apscheduler:
                 minute = int(time.split(':')[1])
 
                 apscheduler.add_job(send_notification, trigger='date',
-                                    run_date=datetime(year, month, day, hour, minute, 0) + timedelta(minutes=-15),
+                                    run_date=datetime(
+                                        year, month, day, hour, minute, 0) + timedelta(minutes=-15),
                                     misfire_grace_time=59,
                                     kwargs={'bot': bot, 'chat_id': message.from_user.id, 'title': cur_course[0],
                                             'room': cur_course[2]})
