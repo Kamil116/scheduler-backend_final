@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from CourseModel import Course
+from backend.CourseModel import Course
 from parsedDataToDatabase import coursesDatabase
 from fastapi.middleware.cors import CORSMiddleware
 
