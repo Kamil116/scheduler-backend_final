@@ -12,10 +12,15 @@ from bot import bot
 from db import StudentsInfoDatabase
 from apsched import send_notification
 from parsedDataToDatabase import coursesDatabase
-from utils.helpers import make_row_keyboard, get_marked_courses, get_marked_groups, start_menu, settings_menu, available_courses, available_groups
+from utils.helpers import make_row_keyboard, get_marked_courses, get_marked_groups, start_menu, settings_menu, \
+    available_courses, available_groups
+from pathlib import Path
 
 router = Router()
-db = StudentsInfoDatabase('data/users.db')
+
+p = Path(__file__).parents[1]
+
+db = StudentsInfoDatabase(fr"{str(p)}\data\users.db")
 
 
 class MenuStates(StatesGroup):
@@ -31,6 +36,7 @@ class SettingsStates(StatesGroup):
     select_group = State()
     select_lectures = State()
     manage_notifications = State()
+
 
 # ------------------- Start -------------------
 
@@ -102,6 +108,7 @@ async def settings_handler(message: Message, state: FSMContext):
 @router.message(MenuStates.settings)
 async def settings_handler(message: Message, state: FSMContext):
     await message.answer("Invalid action", reply_markup=make_row_keyboard(settings_menu))
+
 
 # ------------------- Select course -------------------
 

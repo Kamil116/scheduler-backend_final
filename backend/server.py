@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from backend.CourseModel import Course
-from parsedDataToDatabase import coursesDatabase
+from backend.CourseModel import UpdateCourse, NewCourse
+from backend.parsedDataToDatabase import coursesDatabase
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -17,54 +17,20 @@ app.add_middleware(
 )
 
 
-async def root():
-    return {'Example': 'This is an example', 'data': 0}
-
-
 @app.get('/get/')
 async def get_all_courses():
-    answer = coursesDatabase.get_courses()
-    if len(answer) == 0:
-        return {'Message': 'We have no courses in database'}
-    result = []
-    for course in answer:
-        if course[6] != 'None':
-            result.append({'title': course[1], 'start': course[2], 'end': course[3],
-                           'extendedProps': {'id': course[0], 'room': course[4], 'course': course[5],
-                                             'group': course[6],
-                                             'instructorName': course[7]}})
-        else:
-            result.append({'title': course[1], 'start': course[2], 'end': course[3],
-                           'extendedProps': {'id': course[0], 'room': course[4], 'course': course[5],
-                                             'instructorName': course[7]}})
-
-    return result
+    return all_courses()
 
 
 @app.delete('/delete/{course_id}')
 async def delete_course(course_id):
     coursesDatabase.delete_course(course_id)
 
-    answer = coursesDatabase.get_courses()
-    if len(answer) == 0:
-        return {'Message': 'We have no courses in database'}
-    result = []
-    for course in answer:
-        if course[6] != 'None':
-            result.append({'title': course[1], 'start': course[2], 'end': course[3],
-                           'extendedProps': {'id': course[0], 'room': course[4], 'course': course[5],
-                                             'group': course[6],
-                                             'instructorName': course[7]}})
-        else:
-            result.append({'title': course[1], 'start': course[2], 'end': course[3],
-                           'extendedProps': {'id': course[0], 'room': course[4], 'course': course[5],
-                                             'instructorName': course[7]}})
-
-    return result
+    return all_courses()
 
 
 @app.put('/update')
-async def update_course(course_to_update: Course):
+async def update_course(course_to_update: UpdateCourse):
     answer = coursesDatabase.get_courses()
 
     if len(answer) == 0:
@@ -80,6 +46,29 @@ async def update_course(course_to_update: Course):
                                           course_to_update.extendedProps['instructorName']
                                           )
 
+    return all_courses()
+
+
+@app.post('/create')
+async def create_course(course_to_create: NewCourse):
+    coursesDatabase.add_course(course_to_create.title,
+                               course_to_create.start,
+                               course_to_create.end,
+                               course_to_create.extendedProps['room'],
+                               course_to_create.extendedProps['course'],
+                               course_to_create.extendedProps['group'],
+                               course_to_create.extendedProps['instructorName']
+                               )
+
+    return all_courses()
+
+
+def all_courses():
+    answer = coursesDatabase.get_courses()
+
+    if len(answer) == 0:
+        return {'Message': 'We have no courses in database'}
+
     result = []
     for course in answer:
         if course[6] != 'None':
@@ -91,5 +80,4 @@ async def update_course(course_to_update: Course):
             result.append({'title': course[1], 'start': course[2], 'end': course[3],
                            'extendedProps': {'id': course[0], 'room': course[4], 'course': course[5],
                                              'instructorName': course[7]}})
-
     return result
