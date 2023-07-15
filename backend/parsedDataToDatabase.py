@@ -1,9 +1,7 @@
 import db
 import json
 
-coursesDatabase = db.CoursesInfoDatabase('courses.db')
-# coursesDatabase = db.CoursesInfoDatabase('test.db')
-#
+coursesDatabase = db.CoursesInfoDatabase('data/courses.db')
 json_file = 'data/output.json'
 
 with open(json_file) as json_data:

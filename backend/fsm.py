@@ -3,67 +3,19 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from db import StudentsInfoDatabase
-from parsedDataToDatabase import coursesDatabase
-from bot import bot
-from datetime import datetime, timedelta
-from apsched import send_notification
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from helpers import make_row_keyboard
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime, timedelta
+
+from bot import bot
+
+from db import StudentsInfoDatabase
+from apsched import send_notification
+from parsedDataToDatabase import coursesDatabase
+from utils.helpers import make_row_keyboard, get_marked_courses, get_marked_groups, start_menu, settings_menu, available_courses, available_groups
 
 router = Router()
-db = StudentsInfoDatabase('users.db')
-
-available_courses = ['B19', 'B20', 'B21', 'B22', 'MS1', 'MS2']
-available_courses_marked = []
-for course in available_courses:
-    available_courses_marked.append(course + " ✅")
-
-# TODO: match course and studying groups. For example, in B19 we have only 6 groups.
-available_groups = ['CS-01', 'CS-02', 'CS-03', 'CS-04', 'CS-05']
-available_groups_marked = []
-for group in available_groups:
-    available_groups_marked.append(group + " ✅")
-
-available_lectures = ['Sport', 'Math', 'English', 'Programming', 'History']
-available_lectures_marked = []
-for lecture in available_lectures:
-    available_lectures_marked.append(lecture + " ✅")
-
-start_menu = ['Today', 'Week', 'Month', 'Settings']
-settings_menu = ['Select course', 'Select group', 'Manage notifications']
-
-
-def get_marked_courses(message: Message):
-    # add mark to selected courses
-    local_courses = available_courses.copy()
-
-    user_course = db.get_course(message.from_user.id)
-
-    # if user_course != '':
-    #     local_courses[local_courses.index(user_course)] += " ✅"
-
-    for course in local_courses:
-        course += " ✅"
-
-    return local_courses
-
-
-def get_marked_groups(message: Message):
-    # add mark to selected groups
-    local_groups = available_groups.copy()
-
-    user_group = db.get_group(message.from_user.id)
-
-    # if user_group != '':
-    #     local_groups[local_groups.index(
-    #         user_group)] += " ✅"
-
-    for group in local_groups:
-        group += " ✅"
-
-    return local_groups
+db = StudentsInfoDatabase('data/users.db')
 
 
 class MenuStates(StatesGroup):
@@ -80,7 +32,7 @@ class SettingsStates(StatesGroup):
     select_lectures = State()
     manage_notifications = State()
 
-# ------------------- Menu States Logic -------------------
+# ------------------- Start -------------------
 
 
 @router.message(Command("start"))
@@ -107,6 +59,9 @@ async def start_handler(message: Message, state: FSMContext):
             await settings(message, state)
         case _:
             await message.answer("Invalid action", reply_markup=make_row_keyboard(start_menu))
+
+
+# ------------------- Menu States Logic -------------------
 
 
 @router.message(Command("Today"))
@@ -153,7 +108,7 @@ async def settings_handler(message: Message, state: FSMContext):
 
 @router.message(Command("Select course"))
 async def select_course(message: Message, state: FSMContext):
-    available_courses_marked = get_marked_courses(message)
+    available_courses_marked = get_marked_courses()
     await message.answer("Please select course:", reply_markup=make_row_keyboard(available_courses_marked))
     await state.set_state(SettingsStates.select_course)
 
@@ -202,9 +157,11 @@ async def select_course_handler(message: Message, state: FSMContext, apscheduler
 
 
 # ------------------- Select group -------------------
+
+
 @router.message(Command("select_group"))
 async def select_group(message: Message, state: FSMContext):
-    available_groups_marked = get_marked_groups(message)
+    available_groups_marked = get_marked_groups()
     await message.answer("Please select group:", reply_markup=make_row_keyboard(available_groups_marked))
     await state.set_state(SettingsStates.select_group)
 

@@ -1,8 +1,8 @@
 from unittest.mock import AsyncMock
 import pytest
 
-from fsm import start_handler, start_menu, SettingsStates, select_course
-from helpers import make_row_keyboard
+from backend.fsm import start_handler, start_menu, SettingsStates, select_course
+from backend.utils.helpers import make_row_keyboard
 
 
 @pytest.mark.asyncio

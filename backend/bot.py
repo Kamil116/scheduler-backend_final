@@ -8,18 +8,6 @@ from aiogram import Bot, Dispatcher
 from config_reader import config
 import fsm
 
-# States System
-# Intial state: `start`
-# States: `select_course`, `manage_lectures`, `manage_notifications`
-# Transitions: `start` -> `select_course` -> `start`
-#              `start` -> `manage_lectures` -> `start`
-#              `start` -> `manage_notifications` -> `start`
-#              `start` -> `start`
-# Handlers: `start` -> `select_course` -> `start`
-#           `start` -> `manage_lectures` -> `start`
-#           `start` -> `manage_notifications` -> `start`
-#           `start` -> `start`
-
 bot = Bot(config.bot_token.get_secret_value())
 
 
