@@ -6,6 +6,9 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
+import json
+
+import data.data_parser as parser
 
 from bot import bot
 
@@ -54,13 +57,15 @@ async def start(message: Message, state: FSMContext):
 
 @router.message(MenuStates.start, F.text.in_(start_menu))
 async def start_handler(message: Message, state: FSMContext):
+    # read json file with parsed data
+
     match message.text:
         case "Today":
-            await today(message, state)
+            await today(parser.today, state)
         case "Week":
-            await week(message, state)
+            await week(parser.week, state)
         case "Month":
-            await month(message, state)
+            await month(parser.month, state)
         case "Settings":
             await settings(message, state)
         case _:
@@ -72,6 +77,11 @@ async def start_handler(message: Message, state: FSMContext):
 
 @router.message(Command("Today"))
 async def today(message: Message, state: FSMContext):
+
+    # read json file
+    with open("data/output.json") as f:
+        data = json.load(f)
+
     await message.answer("Today")
     await start(message, state)
 
