@@ -10,20 +10,17 @@ import json
 
 import data.data_parser as parser
 
-from bot import bot
+from backend.bot import bot
 
-from db import StudentsInfoDatabase
-from apsched import send_notification
-from parsedDataToDatabase import coursesDatabase
-from utils.helpers import make_row_keyboard, get_marked_courses, get_marked_groups, start_menu, settings_menu, \
+from backend.db import StudentsInfoDatabase
+from backend.apsched import send_notification
+from backend.parsedDataToDatabase import coursesDatabase
+from backend.utils.helpers import make_row_keyboard, get_marked_courses, get_marked_groups, start_menu, settings_menu, \
     available_courses, available_groups
-from pathlib import Path
 
 router = Router()
 
-p = Path(__file__).parents[1]
-
-db = StudentsInfoDatabase(fr"{str(p)}\data\users.db")
+db = StudentsInfoDatabase("data/users.db")
 
 
 class MenuStates(StatesGroup):
@@ -77,7 +74,6 @@ async def start_handler(message: Message, state: FSMContext):
 
 @router.message(Command("Today"))
 async def today(message: Message, state: FSMContext):
-
     # read json file
     with open("data/output.json") as f:
         data = json.load(f)

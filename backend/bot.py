@@ -6,7 +6,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Bot, Dispatcher
 
 from config_reader import config
-import fsm
+from backend import fsm
 
 bot = Bot(config.bot_token.get_secret_value())
 
